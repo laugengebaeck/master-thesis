@@ -1,13 +1,12 @@
 from typing import List
-from io import BytesIO
 from PIL import Image
-from pdf2image import convert_from_path
+from pdf2image import convert_from_bytes
 from img2table.document import Image as I2T_Image
 
 from util import pillow_image_to_bytes
 
-def pdf_convert_to_images(filename: str) -> List[Image.Image]:
-    return convert_from_path(filename, dpi=300, grayscale=True, fmt='jpeg')
+def pdf_convert_to_images(pdf_file: bytes) -> List[Image.Image]:
+    return convert_from_bytes(pdf_file, dpi=300, grayscale=True, fmt='jpeg')
 
 def image_detect_table(img: Image.Image) -> tuple[int, int, int, int]:
     i2t_img = I2T_Image(src=pillow_image_to_bytes(img))
@@ -31,5 +30,5 @@ def image_crop_to_table(images: List[Image.Image]) -> List[Image.Image]:
         cropped_images.append(table)
     return cropped_images
 
-def pdf_get_table_images(pdf_file: str) -> List[Image.Image]:
+def pdf_get_table_images(pdf_file: bytes) -> List[Image.Image]:
     return image_crop_to_table(pdf_convert_to_images(pdf_file))

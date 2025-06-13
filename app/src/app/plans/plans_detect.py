@@ -1,27 +1,38 @@
-import os
 from zipfile import ZipFile
 
 import plans_handlers
+from tables.table_crop import pdf_get_table_images
+from tables.table_ocr import tables_perform_ocr
 
 plan_file_map = {
-    "Az": plans_handlers.handle_az_plan,
-    "D-Weg": plans_handlers.handle_dweg_plan,
-    "Flank": plans_handlers.handle_flank_plan,
-    "GM": plans_handlers.handle_gm_plan,
-    "Gp": plans_handlers.handle_gp_plan,
-    "Rang": plans_handlers.handle_rang_plan,
-    "Sb": plans_handlers.handle_sb_plan,
-    "Sig1": plans_handlers.handle_sig1_plan,
-    "Sig2": plans_handlers.handle_sig2_plan,
-    "Wei": plans_handlers.handle_wei_plan,
-    "Zug": plans_handlers.handle_zug_plan,
-    "Zwie": plans_handlers.handle_zwie_plan,
+    'Az': plans_handlers.handle_az_plan,
+    'D-Weg': plans_handlers.handle_dweg_plan,
+    'Flank': plans_handlers.handle_flank_plan,
+    'GM': plans_handlers.handle_gm_plan,
+    'Gp': plans_handlers.handle_gp_plan,
+    'Rang': plans_handlers.handle_rang_plan,
+    'Sb': plans_handlers.handle_sb_plan,
+    'Sig1': plans_handlers.handle_sig1_plan,
+    'Sig2': plans_handlers.handle_sig2_plan,
+    'Wei': plans_handlers.handle_wei_plan,
+    'Zug': plans_handlers.handle_zug_plan,
+    'Zwie': plans_handlers.handle_zwie_plan,
 
 }
 
-def detect_plans(zip_file: str):
-    with ZipFile(zip_file, "r") as zip:
-        files_in_zip = list(filter(lambda f: f.endswith('.pdf'), zip.namelist()))
-        print([os.path.basename(file) for file in files_in_zip if file.endswith('.pdf')]) 
+def plan_read_to_dataframes(pdf_file: bytes):
+    table_images = pdf_get_table_images(pdf_file)
+    table_dfs = tables_perform_ocr(table_images, min_confidence=30)
+    return table_dfs
 
-detect_plans('../../Planungen_PT1/2019-10-30_PT1_ÄM02.zip')
+def detect_plans(zip_file: str):
+    with ZipFile(zip_file, 'r') as zip:
+        files_in_zip = list(filter(lambda f: f.endswith('.pdf'), zip.namelist()))
+        for plan_name, handler in plan_file_map.items():
+            plan_files = list(filter(lambda f: plan_name in f, files_in_zip))
+            if len(plan_files) > 1:
+                raise ValueError(f'ZIP file contains more than one plan of type {plan_name}.')
+            if len(plan_files) != 0:
+                pdf_file = zip.read(plan_files[0])
+                tables = plan_read_to_dataframes(pdf_file)
+                handler(tables)
