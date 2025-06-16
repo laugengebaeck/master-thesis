@@ -6,7 +6,7 @@ from img2table.document import Image as I2T_Image
 from util import pillow_image_to_bytes
 
 def pdf_convert_to_images(pdf_file: bytes) -> List[Image.Image]:
-    return convert_from_bytes(pdf_file, dpi=300, grayscale=True, fmt='jpeg')
+    return convert_from_bytes(pdf_file, dpi=300, grayscale=True, fmt="jpeg")
 
 def image_detect_table(img: Image.Image) -> tuple[int, int, int, int]:
     i2t_img = I2T_Image(src=pillow_image_to_bytes(img))
