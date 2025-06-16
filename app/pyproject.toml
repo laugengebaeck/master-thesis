@@ -12,12 +12,15 @@ dependencies = [
     "img2table (>=1.4.1,<2.0.0)",
     "python-doctr[torch] (>=0.11.0,<0.12.0)",
     "opencv-contrib-python-headless (>=4.11.0.86,<5.0.0.0)",
+    "planpro-exporter @ git+https://github.com/simulate-digital-rail/planpro-exporter.git",
 ]
 
 [tool.poetry]
 packages = [{include = "app", from = "src"}]
 package-mode = false
 
+[tool.poetry.dependencies]
+yaramo = { git = "https://github.com/simulate-digital-rail/yaramo.git", tag = "v1.0" }
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
