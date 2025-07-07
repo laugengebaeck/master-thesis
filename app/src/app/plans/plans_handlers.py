@@ -2,6 +2,8 @@ from typing import List
 
 import pandas as pd
 
+from signals.signal_parse import parse_signal_column
+
 def handle_az_plan(tables: List[pd.DataFrame]):
     pass
 
@@ -26,17 +28,11 @@ def handle_sb_plan(tables: List[pd.DataFrame]):
 def handle_sig1_plan(tables: List[pd.DataFrame]):
     print("Processing Signaltabelle 1...")
     for table in tables:
-        for i in range(3, table.shape[1]):
-            if not pd.isna(table.iat[0, i]):
-                print(f"Main or distant signal {table.iat[0, i]}") 
-            elif not pd.isna(table.iat[1, i]):
-                print(f"Shunting signal {table.iat[1, i]}")
-            elif not pd.isna(table.iat[2, i]):
-                print(f"Other signal {table.iat[2, i]}")
-            # else ignore column
-            if not pd.isna(table.iat[20, i]):
-                print(table.iat[20, i])
-                print("Has Hp0")
+        signals = [parse_signal_column(table, i) for i in range(3, table.shape[1])]
+        for signal in signals:
+            if signal is not None:
+                print(signal.to_json())
+
 
 def handle_sig2_plan(tables: List[pd.DataFrame]):
     pass
