@@ -149,10 +149,17 @@ def get_signal_states(df: pd.DataFrame, col: int) -> Set[SignalState]:
 
 def cell_to_zs3_symbols(cell_content: str) -> List[AdditionalSignalZs3.AdditionalSignalSymbolZs3]:
     zs3_symbols = []
-    for number in cell_content.split(","):
+    for number_str in cell_content.split(","):
         # TODO yaramo kann Form-Zs3 nicht extra angeben
-        number = int(number.strip().removesuffix("F"))
-        zs3_symbols.append(AdditionalSignalZs3.AdditionalSignalSymbolZs3.from_number(number))
+        number_str = number_str.replace(" ", "").removesuffix("F")
+        number = int(number_str)
+        if number > 16:
+            # if the OCR obviously missed commas, we assume each char is its own Zs3 value
+            # TODO this fails if one of the actual values is 10-16, or if the OCR erroneously grouped this cell with the next one
+            for part_number in number_str:
+                zs3_symbols.append(AdditionalSignalZs3.AdditionalSignalSymbolZs3(int(part_number)))
+        else:
+            zs3_symbols.append(AdditionalSignalZs3.AdditionalSignalSymbolZs3(number))
     return zs3_symbols
 
 def cell_to_zs2_symbols(cell_content: str) -> List[AdditionalSignalZs2.AdditionalSignalSymbolZs2]:

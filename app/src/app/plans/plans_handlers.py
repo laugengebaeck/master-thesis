@@ -27,8 +27,9 @@ def handle_sb_plan(tables: List[pd.DataFrame]):
 
 def handle_sig1_plan(tables: List[pd.DataFrame]):
     print("Processing Signaltabelle 1...")
-    for table in tables:
+    for i, table in enumerate(tables):
         signals = [parse_signal_column(table, i) for i in range(3, table.shape[1])]
+        print(f"Processed page {i+1}.")
         for signal in signals:
             if signal is not None:
                 print(signal.to_json())
