@@ -27,7 +27,7 @@ def get_signal_function(signal_name: str):
         return SignalFunction.andere
     elif signal_name[0] in ["N", "P", "O", "Q"] and signal_name[1:].isdigit():
         return SignalFunction.Ausfahr_Signal
-    elif signal_name[0] in ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"] and signal_name[1:].isdigit():
+    elif signal_name[0] in ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"]:
         return SignalFunction.Einfahr_Signal
     elif signal_name.isdigit():
         return SignalFunction.Block_Signal
@@ -39,7 +39,7 @@ def get_signal_kind(df: pd.DataFrame, col: int) -> SignalKind:
     ks_cell = df.iat[21, col]
     ra_sh_cell = df.iat[22, col]
 
-    is_main_signal = not pd.isna(hp0_cell) and "0" in str(hp0_cell) # Hp0 nur wenn Hauptsignalfunktion
+    is_main_signal = not pd.isna(hp0_cell) and not pd.isna(ks_cell) and "0" in str(hp0_cell) # Hp0 + mindestens 1 Ks = Hauptsignal
     is_distant_signal = not pd.isna(ks_cell) and "2" in str(ks_cell) # Ks2 nur wenn Vorsignalfunktion
     is_shunting_signal = not pd.isna(ra_sh_cell)
 
