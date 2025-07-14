@@ -32,7 +32,8 @@ def handle_sig1_plan(tables: List[pd.DataFrame]):
         print(f"Processed page {i+1}.")
         for signal in signals:
             if signal is not None:
-                print(signal.to_json())
+                print(f"{signal.name}: func: {signal.function}, kind: {signal.kind}")
+                #print(signal.to_json())
 
 
 def handle_sig2_plan(tables: List[pd.DataFrame]):

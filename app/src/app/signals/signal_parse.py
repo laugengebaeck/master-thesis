@@ -27,7 +27,7 @@ def get_signal_function(signal_name: str):
         return SignalFunction.andere
     elif signal_name[0] in ["N", "P", "O", "Q"] and signal_name[1:].isdigit():
         return SignalFunction.Ausfahr_Signal
-    elif signal_name[0] in ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"]:
+    elif signal_name[0] in ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"] and (len(signal_name) == 1 or (len(signal_name) == 2 and signal_name[0] == signal_name[1])):
         return SignalFunction.Einfahr_Signal
     elif signal_name.isdigit():
         return SignalFunction.Block_Signal
@@ -48,6 +48,7 @@ def get_signal_kind(df: pd.DataFrame, col: int) -> SignalKind:
             return SignalKind.Mehrabschnittssignal
         if is_shunting_signal:
             return SignalKind.Hauptsperrsignal
+        return SignalKind.Hauptsignal
     elif is_distant_signal:
         name_cell = df.iat[0, col]
         if not pd.isna(name_cell) and "VW" in str(name_cell):
@@ -97,6 +98,7 @@ def get_signal_states(df: pd.DataFrame, col: int) -> Set[SignalState]:
             states.add(SignalState.ZS1)
         elif "6" in zs_signal_strings:
             # TODO yaramo doesn't know Zs6
+            # TODO 6F is also possible
             pass
         elif "7" in zs_signal_strings:
             # TODO yaramo doesn't know Zs7
