@@ -7,7 +7,7 @@ from yaramo.additional_signal import AdditionalSignalZs2, AdditionalSignalZs2v, 
 import logging
 import pandas as pd
 
-# splits in classification number nad short name
+# splits in classification number and short name
 def split_signal_name(signal_name: str) -> Tuple[str, str]:
     if signal_name[1].isalpha():
         return signal_name[:1], signal_name[1:]
@@ -193,19 +193,24 @@ def get_additional_signals(df: pd.DataFrame, col: int) -> List[AdditionalSignal]
     return add_signals
 
 def get_side_distance(df: pd.DataFrame, col: int) -> int | None:
-    return None
-    # TODO code currently faulty, investigate later
-    distance_left_cell = df.iat[37, col]
-    distance_right_cell = df.iat[38, col]
+    distance_left_cell = df.iat[36, col]
+    distance_right_cell = df.iat[37, col]
 
     # TODO Was, wenn beide Zahlen dastehen?
     if not pd.isna(distance_left_cell):
-        return -1 * int(str(distance_left_cell))
+        if not str(distance_left_cell).isdigit():
+            logging.warning(f"column {col}: Wrong row was chosen for side distance (TODO).")
+        else:
+            return -1 * int(str(distance_left_cell))
     elif not pd.isna(distance_right_cell):
-        return int(str(distance_right_cell))
+        if not str(distance_right_cell).isdigit():
+            logging.warning(f"column {col}: Wrong row was chosen for side distance (TODO).")
+        else:
+            return int(str(distance_right_cell))
     else:
         logging.warning(f"column {col}: No side distance for signal given")
-        return None
+    
+    return None
 
 
 def parse_signal_column(df: pd.DataFrame, col: int) -> Signal | None:
