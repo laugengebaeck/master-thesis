@@ -1,4 +1,3 @@
-from typing import List, Set, Tuple
 from yaramo.edge import Edge
 from yaramo.node import Node
 from yaramo.signal import Signal, SignalDirection, SignalFunction, SignalKind, SignalState, SignalSystem, AdditionalSignal
@@ -8,7 +7,7 @@ import logging
 import pandas as pd
 
 # splits in classification number and short name
-def split_signal_name(signal_name: str) -> Tuple[str, str]:
+def split_signal_name(signal_name: str) -> tuple[str, str]:
     if signal_name[1].isalpha():
         return signal_name[:1], signal_name[1:]
     else:
@@ -61,7 +60,7 @@ def get_signal_kind(df: pd.DataFrame, col: int) -> SignalKind:
     return SignalKind.andere
         
     
-def get_signal_states(df: pd.DataFrame, col: int) -> Set[SignalState]:
+def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
     states = set()
 
     hp0_cell = df.iat[20, col]
@@ -149,7 +148,7 @@ def get_signal_states(df: pd.DataFrame, col: int) -> Set[SignalState]:
 
     return states
 
-def cell_to_zs3_symbols(cell_content: str) -> List[AdditionalSignalZs3.AdditionalSignalSymbolZs3]:
+def cell_to_zs3_symbols(cell_content: str) -> list[AdditionalSignalZs3.AdditionalSignalSymbolZs3]:
     zs3_symbols = []
     for number_str in cell_content.split(","):
         # TODO yaramo kann Form-Zs3 nicht extra angeben
@@ -164,12 +163,12 @@ def cell_to_zs3_symbols(cell_content: str) -> List[AdditionalSignalZs3.Additiona
             zs3_symbols.append(AdditionalSignalZs3.AdditionalSignalSymbolZs3(number))
     return zs3_symbols
 
-def cell_to_zs2_symbols(cell_content: str) -> List[AdditionalSignalZs2.AdditionalSignalSymbolZs2]:
+def cell_to_zs2_symbols(cell_content: str) -> list[AdditionalSignalZs2.AdditionalSignalSymbolZs2]:
     is_valid_symbol = lambda letter: len(list(filter(lambda enum: enum.value == letter, AdditionalSignalZs2.AdditionalSignalSymbolZs2))) != 0
     return [AdditionalSignalZs2.AdditionalSignalSymbolZs2(letter.strip()) for letter in cell_content.split(",") if is_valid_symbol(letter)]
 
 
-def get_additional_signals(df: pd.DataFrame, col: int) -> List[AdditionalSignal]:
+def get_additional_signals(df: pd.DataFrame, col: int) -> list[AdditionalSignal]:
     add_signals = []
 
     zs2_cell = df.iat[16, col]

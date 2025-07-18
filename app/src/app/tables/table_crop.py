@@ -1,11 +1,10 @@
-from typing import List
 from PIL import Image
 from pdf2image import convert_from_bytes
 from img2table.document import Image as I2T_Image
 
 from util import pillow_image_to_bytes
 
-def pdf_convert_to_images(pdf_file: bytes) -> List[Image.Image]:
+def pdf_convert_to_images(pdf_file: bytes) -> list[Image.Image]:
     return convert_from_bytes(pdf_file, dpi=300, grayscale=True, fmt="jpeg")
 
 def image_detect_table(img: Image.Image) -> tuple[int, int, int, int]:
@@ -13,7 +12,7 @@ def image_detect_table(img: Image.Image) -> tuple[int, int, int, int]:
     bbox = i2t_img.extract_tables()[0].bbox
     return bbox.x1, bbox.y1, bbox.x2, bbox.y2
 
-def image_crop_to_table(images: List[Image.Image]) -> List[Image.Image]:
+def image_crop_to_table(images: list[Image.Image]) -> list[Image.Image]:
     cropped_images = []
     for img in images:
         # first, get the outer border (which img2table thinks is a table)
@@ -30,5 +29,5 @@ def image_crop_to_table(images: List[Image.Image]) -> List[Image.Image]:
         cropped_images.append(table)
     return cropped_images
 
-def pdf_get_table_images(pdf_file: bytes) -> List[Image.Image]:
+def pdf_get_table_images(pdf_file: bytes) -> list[Image.Image]:
     return image_crop_to_table(pdf_convert_to_images(pdf_file))

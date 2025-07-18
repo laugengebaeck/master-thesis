@@ -2,8 +2,7 @@ from zipfile import ZipFile
 
 import plans.plans_handlers as plans_handlers
 from plans.plans_import_export import plan_export
-from tables.table_crop import pdf_get_table_images
-from tables.table_ocr import tables_perform_ocr
+from plans.plans_read import PlanReader
 
 plan_file_map = {
     #"Az": plans_handlers.handle_az_plan,
@@ -21,12 +20,7 @@ plan_file_map = {
 
 }
 
-def plan_read_to_dataframes(pdf_file: bytes):
-    table_images = pdf_get_table_images(pdf_file)
-    table_dfs = tables_perform_ocr(table_images, min_confidence=30)
-    return table_dfs
-
-def detect_plans(zip_file: str):
+def detect_plans(zip_file: str, plan_reader: PlanReader):
     with ZipFile(zip_file, "r") as zip:
         files_in_zip = list(filter(lambda f: f.endswith(".pdf"), zip.namelist()))
         for plan_type, handler in plan_file_map.items():
@@ -35,6 +29,6 @@ def detect_plans(zip_file: str):
                 raise ValueError(f"ZIP file contains more than one plan of type {plan_type}.")
             if len(plan_files) != 0:
                 pdf_file = zip.read(plan_files[0])
-                tables = plan_read_to_dataframes(pdf_file)
+                tables = plan_reader.read_tables(pdf_file)
                 plan_export(tables, plan_type, plan_files[0])
                 handler(tables)

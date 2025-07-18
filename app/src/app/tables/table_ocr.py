@@ -1,6 +1,5 @@
-from typing import List
 from PIL import Image
-from img2table.document import Image as I2T_Image
+from img2table.document import Image as I2T_Image, PDF
 from img2table.ocr import DocTR
 
 from util import pillow_image_to_bytes
@@ -40,6 +39,6 @@ def table_perform_ocr_multiple(table_image: Image.Image, min_confidence: int):
                     print(f"table {idx}: cell has different value than before (should not happen!) for {i}, {j}: {end_value} -> {cell_value}")
     return table_dfs[0]
 
-def tables_perform_ocr(table_images: List[Image.Image], min_confidence: int) -> List[pd.DataFrame]:
+def tables_perform_ocr(table_images: list[Image.Image], min_confidence: int) -> list[pd.DataFrame]:
     # return [table_perform_ocr_multiple(table_images[0], min_confidence)]
     return [table_perform_ocr(image, min_confidence) for image in table_images]
