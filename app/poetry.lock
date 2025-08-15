@@ -1248,43 +1248,23 @@ reference = ["Pillow", "google-re2 ; python_version < \"3.13\""]
 
 [[package]]
 name = "opencv-contrib-python"
-version = "4.11.0.86"
+version = "4.12.0.88"
 description = "Wrapper package for OpenCV python bindings."
 optional = false
 python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "opencv-contrib-python-4.11.0.86.tar.gz", hash = "sha256:4ff773dab44911da366b906621c9592d4eb96f6ad3777098933a23f064aab38e"},
-    {file = "opencv_contrib_python-4.11.0.86-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:d911cedc511d98f79994580b245d59fc97f57f0f9923a99945d8b92c7ac671f6"},
-    {file = "opencv_contrib_python-4.11.0.86-cp37-abi3-macosx_13_0_x86_64.whl", hash = "sha256:e10a293af18aa5f842d012fa14e87345b3ee06db4c29bd592ff94b51f7ffca2b"},
-    {file = "opencv_contrib_python-4.11.0.86-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f21034bc8b00eb286a0a0a92b99767bf596bfe426cf4bc2e79647d64ad0dd6da"},
-    {file = "opencv_contrib_python-4.11.0.86-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c47c0ef1098461cdc6fa1cdce4c942b8ec974c87423f4b5951443d26bb9ae407"},
-    {file = "opencv_contrib_python-4.11.0.86-cp37-abi3-win32.whl", hash = "sha256:194841c664ceaa0692410b4ed0af557425608e33db3a181ded28b87acb66748d"},
-    {file = "opencv_contrib_python-4.11.0.86-cp37-abi3-win_amd64.whl", hash = "sha256:654758a9ae8ca9a75fca7b64b19163636534f0eedffe1e14c3d7218988625c8d"},
+    {file = "opencv-contrib-python-4.12.0.88.tar.gz", hash = "sha256:0f1e22823aace09067b9a0e8e2b4ba6d7a1ef08807d6cebea315f3133f419a0e"},
+    {file = "opencv_contrib_python-4.12.0.88-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:decc3a2627e03e61ec398919a8647b7f78315bf285e64bcd7dd4501b653f22bc"},
+    {file = "opencv_contrib_python-4.12.0.88-cp37-abi3-macosx_13_0_x86_64.whl", hash = "sha256:e1209da6553b9c2b348fb5c878c2cd0e0121f9335981b7a9735c10d1ef1580ac"},
+    {file = "opencv_contrib_python-4.12.0.88-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:7b3b834d5a2b84f26e5b62ff9ae07a287ab668d2343773372c3b97a335cd7c4f"},
+    {file = "opencv_contrib_python-4.12.0.88-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:ac2627dcdf5bd625706949ada7994524320b656a991315ff6ae70043fc983689"},
+    {file = "opencv_contrib_python-4.12.0.88-cp37-abi3-win32.whl", hash = "sha256:fe3a5cbc1467c3620aeda3afd8d363886298a6fc85b48d62b2991afab65076c5"},
+    {file = "opencv_contrib_python-4.12.0.88-cp37-abi3-win_amd64.whl", hash = "sha256:62c20c14fdd794c9d0fbc780b3d52a74bc967d205664d25b3906951abedc9f65"},
 ]
 
 [package.dependencies]
-numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
-
-[[package]]
-name = "opencv-contrib-python-headless"
-version = "4.11.0.86"
-description = "Wrapper package for OpenCV python bindings."
-optional = false
-python-versions = ">=3.6"
-groups = ["main"]
-files = [
-    {file = "opencv-contrib-python-headless-4.11.0.86.tar.gz", hash = "sha256:839319098a73264c580c97cb1ca835f7fce3d30e4fa9fa6d4d0618fff551be0b"},
-    {file = "opencv_contrib_python_headless-4.11.0.86-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:b34485c0164057726eee8cb80d5cd5dedaab5edde716451fb4107dcc60cf40f0"},
-    {file = "opencv_contrib_python_headless-4.11.0.86-cp37-abi3-macosx_13_0_x86_64.whl", hash = "sha256:ec88044ecb426549b05a8a6187e68051299848c4556ef8cef310621ca8f4316b"},
-    {file = "opencv_contrib_python_headless-4.11.0.86-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a8dc2f4109904ffa55967bf9ceb1521ce46d66c333e2f6261dfa1f957a1dbde0"},
-    {file = "opencv_contrib_python_headless-4.11.0.86-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3e7a86bf02e8157a2d9fce26d44eaafd31113fc21fc8b4f44ff56c28ab32fdba"},
-    {file = "opencv_contrib_python_headless-4.11.0.86-cp37-abi3-win32.whl", hash = "sha256:d2c10564c01f6c308ded345a3b37359714e694361e593e515c148465eda09c2a"},
-    {file = "opencv_contrib_python_headless-4.11.0.86-cp37-abi3-win_amd64.whl", hash = "sha256:2671a828e5c8ec9d237dd8506a9e0268487d37e07625725f1a6de5fa973ea7fa"},
-]
-
-[package.dependencies]
-numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
+numpy = {version = ">=2,<2.3.0", markers = "python_version >= \"3.9\""}
 
 [[package]]
 name = "opencv-python"
@@ -2611,4 +2591,4 @@ resolved_reference = "ce20b43f2a634e4e4414273b2cf753d3653e6eda"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "f459fdf4042c9d5e3e27532a88297724df41e48671c34f752513e801cc3a7b6a"
+content-hash = "c970b369cbc8be81164583bc7ef5cb27e2d6ba89b11960db5dfb25bcd87dad10"
