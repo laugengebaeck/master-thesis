@@ -1,12 +1,14 @@
-import sys
 import math
-from zipfile import ZipFile
 import cv2 as cv
 import numpy as np
+
+from itertools import groupby
+from zipfile import ZipFile
 
 from util import pillow_image_to_bytes
 from tables.table_crop import pdf_convert_to_images
 
+SIMILAR_LINE_DISTANCE = 200
 
 def main():
     # load ZIP
@@ -25,33 +27,39 @@ def main():
     dst = cv.Canny(src, 50, 200, None, 3)
  
     # Copy edges to the images that will display the results in BGR
-    cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
-    cdstP = np.copy(cdst)
+    cdstP = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
+    
+    linesP = cv.HoughLinesP(dst, 1, np.pi / 180, 50, None, 125, 45)
 
-    lines = cv.HoughLines(dst, 1, np.pi / 180, 200, None, 0, 0)
-    
-    if lines is not None:
-        for i in range(0, len(lines)):
-            rho = lines[i][0][0]
-            theta = lines[i][0][1]
-            a = math.cos(theta)
-            b = math.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-            pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
-            cv.line(cdst, pt1, pt2, (0,0,255), 3, cv.LINE_AA) 
-    
-    linesP = cv.HoughLinesP(dst, 1, np.pi / 180, 50, None, 20, 10)
+    # first sort by x coordinates, then by y coordinates
+    linesP = sorted(linesP, key = lambda l: (l[0][0], l[0][2], l[0][1], l[0][3]))
     
     if linesP is not None:
         for i in range(0, len(linesP)):
             l = linesP[i][0]
+            lprev = linesP[i-1][0] if i > 0 else None
+            # first sketchy try at removing signal symbol lines and similar
+            # there are usually lots of lines near each other at these symbols
+            # should also check if line lengths are small
+            # should also do the same check with lnext
+            if lprev is not None:
+                startdist = math.dist((l[0], l[1]), (lprev[0], lprev[1]))
+                enddist = math.dist((l[2], l[3]), (lprev[2], lprev[3]))
+                startdist_switched = math.dist((l[0], l[1]), (lprev[2], lprev[3]))
+                enddist_switched = math.dist((l[2], l[3]), (lprev[0], lprev[1]))
+                if (startdist <= SIMILAR_LINE_DISTANCE and enddist <= SIMILAR_LINE_DISTANCE) or (startdist_switched <= SIMILAR_LINE_DISTANCE and enddist_switched <= SIMILAR_LINE_DISTANCE):
+                    continue
+            print(f"({l[0]}, {l[1]}) -- ({l[2]}, {l[3]})")
             cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv.LINE_AA)
 
-    cv.imwrite("./detected_standard.jpg", cdst)
+    # linesPGrouped = groupby(linesP, lambda l: round(l[0][1], -1))
+
+    # groups = [{'type':k, 'items':[x[0] for x in v]} for k, v in linesPGrouped]
+
+    #for group in groups:
+    #    print(f"{group['type']} -> {group['items']}")
+
     cv.imwrite("./detected_probabilistic.jpg", cdstP)
-    return 0
 
 if __name__ == "__main__":
     main()
