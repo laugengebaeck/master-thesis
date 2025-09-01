@@ -4,8 +4,8 @@ from img2table.document import PDF
 
 import pandas as pd
 
-from tables.table_crop import pdf_convert_to_images, pdf_get_table_images
-from tables.table_ocr import tables_perform_ocr
+from tables.crop import pdf_convert_to_images, pdf_get_table_images
+from tables.ocr import tables_perform_ocr
 
 class PlanReaderType(Enum):
     PDF_TEXT = 1

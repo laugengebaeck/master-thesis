@@ -3,7 +3,7 @@ import numpy as np
 from zipfile import ZipFile
 
 from util import pillow_image_to_bytes
-from tables.table_crop import pdf_convert_to_images
+from tables.crop import pdf_convert_to_images
 from topology_plans.find_lines import detect_lines, visualize_lines
 from topology_plans.find_switches import detect_triangles
 

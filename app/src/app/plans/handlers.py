@@ -1,6 +1,6 @@
 import pandas as pd
 
-from signals.signal_parse import parse_signal_column
+from signals.parse import parse_signal_column
 
 def handle_az_plan(tables: list[pd.DataFrame]):
     pass
