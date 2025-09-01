@@ -14,6 +14,7 @@ dependencies = [
     "yaramo @ git+https://github.com/simulate-digital-rail/yaramo@yaramo2",
     "planpro-exporter @ git+https://github.com/simulate-digital-rail/planpro-exporter@yaramo2",
     "opencv-contrib-python (>=4.12.0.88,<5.0.0.0)",
+    "networkx (>=3.5,<4.0)",
 ]
 
 [tool.poetry]

@@ -15,8 +15,6 @@ def triangle_area(approx: cv2.typing.MatLike):
     return math.sqrt(s * (s - a) * (s - b) * (s - c))
 
 def detect_triangles(src: cv2.typing.MatLike):
-    dst = cv2.cvtColor(src, cv2.COLOR_GRAY2BGR)
-
     kernel = np.ones((4, 4), np.uint8)
     dilation = cv2.dilate(src, kernel, iterations=1)
     blur = cv2.GaussianBlur(dilation, (5, 5), 0)
@@ -24,14 +22,17 @@ def detect_triangles(src: cv2.typing.MatLike):
 
     contours, _ = cv2.findContours(
         thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    
     coordinates = []
     for cnt in contours:
         approx = cv2.approxPolyDP(
             cnt, 0.07 * cv2.arcLength(cnt, True), True)
-        if len(approx) == 3:
-            coordinates.append([cnt])
-            if triangle_area(approx) < 50:
-                continue
-            cv2.drawContours(dst, [approx], 0, (0, 0, 255), 3)
+        if len(approx) == 3 and triangle_area(approx) >= 100 and triangle_area(approx) <= 500:
+            coordinates.append(approx)
+    return coordinates
 
-    cv2.imwrite("detected_triangles.png", dst)
+def visualize_switches(img, switches, path):
+    dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    for switch in switches:
+        cv2.drawContours(dst, [switch], 0, (0, 0, 255), 3)
+    cv2.imwrite(path, dst)

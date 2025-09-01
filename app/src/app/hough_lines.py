@@ -5,7 +5,8 @@ from zipfile import ZipFile
 from util import pillow_image_to_bytes
 from tables.crop import pdf_convert_to_images
 from topology_plans.find_lines import detect_lines, visualize_lines
-from topology_plans.find_switches import detect_triangles
+from topology_plans.find_switches import detect_triangles, visualize_switches
+from topology_plans.topology_graph import create_graph
 
 def main():
     # load ZIP
@@ -22,9 +23,11 @@ def main():
         return -1
     
     lines = detect_lines(src)
-    visualize_lines(src, lines, "./detected_probabilistic.jpg")
+    visualize_lines(src, lines, "detected_probabilistic.jpg")
+    create_graph(lines)
 
-    # detect_triangles(src)
+    #triangles = detect_triangles(src)
+    #visualize_switches(src, triangles, "detected_triangles.png")
 
 if __name__ == "__main__":
     main()

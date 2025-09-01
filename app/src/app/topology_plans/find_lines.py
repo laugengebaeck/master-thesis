@@ -11,14 +11,14 @@ def is_line_angle_correct(line):
     # check angle, special handling for lines nearly parallel to y axis
     delta_y1 = abs(line[3] - line[1])
     delta_x1 = abs(line[2] - line[0])
-    angle = abs(math.degrees(math.atan(delta_y1/delta_x1)))
+    angle = abs(math.degrees(math.atan(delta_y1/delta_x1))) if delta_x1 >= 10 else 90
 
     # we regard angles that differ by a multiple of 90 degrees as the same
     while round(angle) > 90:
         angle -= 90
 
     # reject 90 degrees angles, allow 0, ~20 and ~45 degree angles
-    return delta_x1 >= 10 and (angle == 0 or abs(angle - 20) < 10 or abs(angle - 45) < 10)
+    return angle == 0 or abs(angle - 20) < 10 or abs(angle - 45) < 10
 
 # try removing signal symbol or text lines and similar
 def is_line_similar(line, line_comp):
