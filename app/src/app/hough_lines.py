@@ -6,7 +6,7 @@ from util import pillow_image_to_bytes
 from tables.crop import pdf_convert_to_images
 from topology_plans.find_lines import detect_lines, visualize_lines
 from topology_plans.find_switches import detect_triangles, visualize_switches
-from topology_plans.topology_graph import create_graph
+from topology_plans.topology_graph import create_graph, visualize_graph
 
 def main():
     # load ZIP
@@ -24,7 +24,8 @@ def main():
     
     lines = detect_lines(src)
     visualize_lines(src, lines, "detected_probabilistic.jpg")
-    create_graph(lines)
+    topology = create_graph(lines)
+    visualize_graph(src, topology, "topology_graph_overlay.png")
 
     #triangles = detect_triangles(src)
     #visualize_switches(src, triangles, "detected_triangles.png")

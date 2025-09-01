@@ -1,32 +1,47 @@
+import cv2
 import math
 import matplotlib.pyplot as plt
 import networkx as nx
 
-SAME_NODE_DIST = 5
+SAME_NODE_DIST = 75
 
-def create_graph(lines):
+def create_graph(lines) -> nx.Graph:
     topology = nx.Graph()
+
     for line in lines:
         start = (line[0], line[1])
         end = (line[2], line[3])
-        # find adjacent nodes to join this line to
-        for node in topology.nodes:
-            if math.dist(start, node) < SAME_NODE_DIST:
-                start = node
-            elif math.dist(end, node):
-                end = node
+
+        # find nearby nodes to join this line to
+        if len(topology.nodes) > 0:
+            start_closest = min(topology.nodes, key=lambda node: math.dist(start, node))
+            if math.dist(start, start_closest) < SAME_NODE_DIST:
+                start = start_closest
+            end_closest = min(topology.nodes, key=lambda node: math.dist(end, node))
+            if math.dist(end, end_closest) < SAME_NODE_DIST:
+                end = end_closest
+        
         topology.add_edge(start, end)
-    largest_cc = max(nx.connected_components(topology), key=len)
-    topology = topology.subgraph(largest_cc).copy()
-    topology = contract_paths(topology)
-    # TODO plot stuff on the plan instead to better see what this is doing
+
+    # largest_cc = max(nx.connected_components(topology), key=len)
+    # topology = topology.subgraph(largest_cc).copy()
+    # topology = contract_paths(topology)
     nx.draw(topology)
     plt.savefig("topology_graph.png")
+    return topology
 
 def contract_paths(G: nx.Graph) -> nx.Graph:
     for node in G.nodes:
-        if len(G.edges(node)) == 1 or len(G.edges(node)) == 2:
+        if len(G.edges(node)) == 2:
             for (u, v) in G.edges(node):
                 G = nx.contracted_edge(G, (v, u), self_loops=False)
                 break # We only want the first edge. Ugly solution, but better than nothing.
     return G
+
+def visualize_graph(img: cv2.typing.MatLike, G: nx.Graph, path: str):
+    color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    for node in G.nodes:
+        cv2.circle(color_dst, node, 20, (0, 255, 0), 5)
+    for (u, v) in G.edges:
+        cv2.line(color_dst, u, v, (0,0,255), 3, cv2.LINE_AA)
+    cv2.imwrite(path, color_dst)

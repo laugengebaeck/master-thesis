@@ -65,6 +65,9 @@ def visualize_lines(img, lines, path):
     color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     for l in lines:
         cv2.line(color_dst, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv2.LINE_AA)
+        # draw circles around the end points
+        cv2.circle(color_dst, (l[0], l[1]), 20, (0, 255, 0), 5)
+        cv2.circle(color_dst, (l[2], l[3]), 20, (0, 255, 0), 5)
         # debug thingy to print angles on the image
         cv2.putText(color_dst, f"{math.degrees(math.atan((l[3]-l[1])/(l[2]-l[0])))} deg", ((l[0]+l[2])//2, (l[1]+l[3])//2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
     cv2.imwrite(path, color_dst)
