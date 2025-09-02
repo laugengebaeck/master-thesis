@@ -9,11 +9,10 @@ from topology_plans.find_switches import detect_triangles, visualize_switches
 from topology_plans.topology_graph import create_graph, visualize_graph
 
 def main():
-    # load ZIP
-    zip_file = "../../Planungen_PT1/2019-10-30_PT1_ÄM02.zip"
-    with ZipFile(zip_file, "r") as zip:
-        pdf_file = zip.read("2019-10-30_PT1_ÄM02/PHSUxx50-Bl2.pdf")
-        page_image = pillow_image_to_bytes(pdf_convert_to_images(pdf_file)[0])
+    # load PDF
+    with open("../../Planungen_PT1/Forchheim_Ausschnitt_scanned.pdf", "rb") as pdf_file:
+        pdf_bytes = pdf_file.read()
+        page_image = pillow_image_to_bytes(pdf_convert_to_images(pdf_bytes)[0])
         page_np = np.frombuffer(page_image, dtype=np.uint8)
         src = cv2.imdecode(page_np, cv2.IMREAD_GRAYSCALE)
 
@@ -24,11 +23,12 @@ def main():
     
     lines = detect_lines(src)
     visualize_lines(src, lines, "detected_probabilistic.jpg")
+
     topology = create_graph(lines)
     visualize_graph(src, topology, "topology_graph_overlay.png")
 
-    #triangles = detect_triangles(src)
-    #visualize_switches(src, triangles, "detected_triangles.png")
+    triangles = detect_triangles(src)
+    visualize_switches(src, triangles, "detected_triangles.png")
 
 if __name__ == "__main__":
     main()

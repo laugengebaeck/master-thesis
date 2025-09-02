@@ -2,7 +2,7 @@ import math
 import cv2
 import numpy as np
 
-SIMILAR_LINE_DISTANCE = 125
+SIMILAR_LINE_DISTANCE = 150
 
 def line_length(line):
     return math.dist((line[0], line[1]), (line[2], line[3]))
@@ -44,11 +44,11 @@ def is_line_similar(line, line_comp):
     
 def detect_lines(src: cv2.typing.MatLike):
     dst = cv2.Canny(src, 50, 200, None, 3)
-    linesP = cv2.HoughLinesP(dst, 1, np.pi / 180, 50, None, 125, 45)
+    linesP = cv2.HoughLinesP(dst, 1, np.pi / 180, 50, None, 125, 40)
     filtered_lines = []
     
     if linesP is not None:
-        linesP = list(filter(lambda l: is_line_angle_correct(l), map(lambda l: l[0], linesP)))
+        linesP = list(filter(lambda l: is_line_angle_correct(l) and line_length(l) >= 400, map(lambda l: l[0], linesP)))
         for l in linesP:
             found_flag = False
             for l_comp in linesP:

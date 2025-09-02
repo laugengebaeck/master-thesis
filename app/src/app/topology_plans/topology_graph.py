@@ -3,7 +3,9 @@ import math
 import matplotlib.pyplot as plt
 import networkx as nx
 
-SAME_NODE_DIST = 75
+from util import flatten_iterable
+
+SAME_NODE_DIST = 200
 
 def create_graph(lines) -> nx.Graph:
     topology = nx.Graph()
@@ -13,6 +15,7 @@ def create_graph(lines) -> nx.Graph:
         end = (line[2], line[3])
 
         # find nearby nodes to join this line to
+        # TODO also consider crossing points of lines for this
         if len(topology.nodes) > 0:
             start_closest = min(topology.nodes, key=lambda node: math.dist(start, node))
             if math.dist(start, start_closest) < SAME_NODE_DIST:
@@ -23,18 +26,22 @@ def create_graph(lines) -> nx.Graph:
         
         topology.add_edge(start, end)
 
-    # largest_cc = max(nx.connected_components(topology), key=len)
-    # topology = topology.subgraph(largest_cc).copy()
+    larger_ccs = flatten_iterable(filter(lambda cc: len(cc) >= 5, nx.connected_components(topology)))
+    topology = topology.subgraph(larger_ccs).copy()
     # topology = contract_paths(topology)
     nx.draw(topology)
     plt.savefig("topology_graph.png")
     return topology
 
 def contract_paths(G: nx.Graph) -> nx.Graph:
+    # TODO only allow contraction if node and both neighbors are on a straight line?
     for node in G.nodes:
         if len(G.edges(node)) == 2:
             for (u, v) in G.edges(node):
-                G = nx.contracted_edge(G, (v, u), self_loops=False)
+                if u == node:
+                    G = nx.contracted_edge(G, (v, u), self_loops=False)
+                else: 
+                    G = nx.contracted_edge(G, (u, v), self_loops=False)
                 break # We only want the first edge. Ugly solution, but better than nothing.
     return G
 
