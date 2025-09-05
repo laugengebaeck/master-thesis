@@ -6,23 +6,23 @@ import numpy as np
 
 from shapely.geometry import LineString
 
-from util import flatten_iterable
+from topology_plans.point import Point
 
-SAME_NODE_DIST = 200
+SAME_NODE_DIST = 215
 SPUR_MAX_LENGTH = 300
 
-def line_intersection(line1, line2):
+def line_intersection(line1: tuple[Point, Point], line2: tuple[Point, Point]) -> Point | None:
     u1, v1 = line1
     u2, v2 = line2
-    ls1 = LineString([u1, v1])
-    ls2 = LineString([u2, v2])
+    ls1 = LineString([u1.to_tuple(), v1.to_tuple()])
+    ls2 = LineString([u2.to_tuple(), v2.to_tuple()])
     if not ls1.intersects(ls2):
         return None
     intersection = ls1.intersection(ls2)
-    return np.int32(intersection.x), np.int32(intersection.y) # type: ignore
+    return Point(np.int32(intersection.x), np.int32(intersection.y)) # type: ignore
 
 # split lines into segments intersecting only at end points to facilitate graph creation
-def split_into_segments(lines: list[tuple[tuple[np.int32, np.int32], tuple[np.int32, np.int32]]]) -> list[tuple[tuple[np.int32, np.int32], tuple[np.int32, np.int32]]]:
+def split_into_segments(lines: list[tuple[Point, Point]]) -> list[tuple[Point, Point]]:
     finished_lines = []
     lines_to_process = lines
 
@@ -44,15 +44,15 @@ def split_into_segments(lines: list[tuple[tuple[np.int32, np.int32], tuple[np.in
     return finished_lines
 
 
-def create_graph(lines) -> nx.Graph:
+def create_graph(lines: list[tuple[Point, Point]]) -> nx.Graph:
     topology = nx.Graph()
-
-    lines = list(map(lambda line: ((line[0], line[1]), (line[2], line[3])), lines))
 
     lines = split_into_segments(lines)
 
-    for start, end in lines:
+    for start_pt, end_pt in lines:
         # find nearby nodes to join this line to
+        start = start_pt.to_tuple()
+        end = end_pt.to_tuple()
         if len(topology.nodes) > 0:
             start_closest = min(topology.nodes, key=lambda node: math.dist(start, node))
             if math.dist(start, start_closest) <= SAME_NODE_DIST:
@@ -63,7 +63,8 @@ def create_graph(lines) -> nx.Graph:
         if start != end:
             topology.add_edge(start, end)
 
-    # TODO find out what is going on with these weird triangles in the graph
+    # TODO remove triangles which are actually just overlapping segments of the same line
+    # TODO herausfinden, wieso Gleissperren-Gleis und Gleis rechts mittig nicht mehr gleichzeitig erkannt werden
     topology = remove_spurs(topology)
     largest_cc = max(nx.connected_components(topology), key=len)
     topology = topology.subgraph(largest_cc).copy()
@@ -76,7 +77,7 @@ def remove_spurs(G: nx.Graph) -> nx.Graph:
     return G
 
 def contract_paths(G: nx.Graph) -> nx.Graph:
-    # TODO make this work correctly before using it
+    # TODO make this work correctly before using it (probably just produces wrong results for triangles)
     # TODO only allow contraction if node and both neighbors are on a straight line?
     for node in G.nodes:
         if G.degree[node] == 2: # type: ignore
@@ -89,7 +90,7 @@ def contract_paths(G: nx.Graph) -> nx.Graph:
     return G
 
 def visualize_graph(img: cv2.typing.MatLike, G: nx.Graph, path: str):
-    nx.draw(G)
+    nx.draw_spring(G, with_labels=True)
     plt.savefig("topology_graph.png")
 
     color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)

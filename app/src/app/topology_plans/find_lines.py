@@ -2,15 +2,17 @@ import math
 import cv2
 import numpy as np
 
+from topology_plans.point import Point
+
 SIMILAR_LINE_DISTANCE = 150
 
-def line_length(line):
-    return math.dist((line[0], line[1]), (line[2], line[3]))
+def distance(point0: Point, point1: Point) -> float:
+    return math.dist(point0.to_tuple(), point1.to_tuple())
 
-def is_line_angle_correct(line):
+def is_line_angle_correct(line: tuple[Point, Point]) -> bool:
     # check angle, special handling for lines nearly parallel to y axis
-    delta_y1 = abs(line[3] - line[1])
-    delta_x1 = abs(line[2] - line[0])
+    delta_y1 = abs(line[1].y - line[0].y)
+    delta_x1 = abs(line[1].x - line[0].x)
     angle = abs(math.degrees(math.atan(delta_y1/delta_x1))) if delta_x1 >= 10 else 90
 
     # we regard angles that differ by a multiple of 90 degrees as the same
@@ -21,20 +23,20 @@ def is_line_angle_correct(line):
     return angle == 0 or abs(angle - 20) < 10 or abs(angle - 45) < 10
 
 # try removing signal symbol or text lines and similar
-def is_line_similar(line, line_comp):
+def is_line_similar(line: tuple[Point, Point], line_comp: tuple[Point, Point]) -> bool:
     # check if slopes are similar, else the lines are also not similar
-    delta_y1 = abs(line[3] - line[1])
-    delta_x1 = abs(line[2] - line[0])
-    delta_y2 = abs(line_comp[3] - line_comp[1])
-    delta_x2 = abs(line_comp[2] - line_comp[0])
+    delta_y1 = abs(line[1].y - line[0].y)
+    delta_x1 = abs(line[1].x - line[0].x)
+    delta_y2 = abs(line_comp[1].y - line_comp[0].x)
+    delta_x2 = abs(line_comp[1].x - line_comp[0].x)
     if delta_x1 != 0 and delta_x2 != 0 and abs(delta_y1 / delta_x1 - delta_y2 / delta_x2) > 2:
         return False
     
     # there are usually lots of lines near each other at these symbols
-    startdist = math.dist((line[0], line[1]), (line_comp[0], line_comp[1]))
-    enddist = math.dist((line[2], line[3]), (line_comp[2], line_comp[3]))
-    startdist_switched = math.dist((line[0], line[1]), (line_comp[2], line_comp[3]))
-    enddist_switched = math.dist((line[2], line[3]), (line_comp[0], line_comp[1]))
+    startdist = distance(line[0], line_comp[0])
+    enddist = distance(line[1], line_comp[1])
+    startdist_switched = distance(line[0], line_comp[1])
+    enddist_switched = distance(line[1], line_comp[0])
     if startdist <= SIMILAR_LINE_DISTANCE and enddist <= SIMILAR_LINE_DISTANCE:
         return True
     elif startdist_switched <= SIMILAR_LINE_DISTANCE and enddist_switched <= SIMILAR_LINE_DISTANCE:
@@ -42,18 +44,22 @@ def is_line_similar(line, line_comp):
     else:
         return False
     
-def detect_lines(src: cv2.typing.MatLike):
+def convert_opencv_line_to_points(line) -> tuple[Point, Point]:
+    line = line[0]
+    return Point(line[0], line[1]), Point(line[2], line[3])
+    
+def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Point, Point]]:
     dst = cv2.Canny(src, 50, 200, None, 3)
     linesP = cv2.HoughLinesP(dst, 1, np.pi / 180, 50, None, 125, 40)
     filtered_lines = []
     
     if linesP is not None:
-        linesP = list(filter(lambda l: is_line_angle_correct(l) and line_length(l) >= 400, map(lambda l: l[0], linesP)))
+        linesP = list(filter(lambda l: is_line_angle_correct(l) and distance(l[0], l[1]) >= 400, map(convert_opencv_line_to_points, linesP)))
         for l in linesP:
             found_flag = False
             for l_comp in linesP:
                 # always keep the longest of the similar lines
-                if is_line_similar(l, l_comp) and line_length(l) < line_length(l_comp):
+                if is_line_similar(l, l_comp) and distance(l[0], l[1]) < distance(l_comp[0], l_comp[1]):
                     found_flag = True
                     break
             if not found_flag:
@@ -61,13 +67,13 @@ def detect_lines(src: cv2.typing.MatLike):
         
     return filtered_lines
 
-def visualize_lines(img, lines, path):
+def visualize_lines(img, lines: list[tuple[Point, Point]], path):
     color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    for l in lines:
-        cv2.line(color_dst, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv2.LINE_AA)
+    for start, end in lines:
+        cv2.line(color_dst, start.to_tuple(), end.to_tuple(), (0,0,255), 3, cv2.LINE_AA)
         # draw circles around the end points
-        cv2.circle(color_dst, (l[0], l[1]), 20, (0, 255, 0), 5)
-        cv2.circle(color_dst, (l[2], l[3]), 20, (0, 255, 0), 5)
+        cv2.circle(color_dst, start.to_tuple(), 20, (0, 255, 0), 5)
+        cv2.circle(color_dst, end.to_tuple(), 20, (0, 255, 0), 5)
         # debug thingy to print angles on the image
-        cv2.putText(color_dst, f"{math.degrees(math.atan((l[3]-l[1])/(l[2]-l[0])))} deg", ((l[0]+l[2])//2, (l[1]+l[3])//2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(color_dst, f"{math.degrees(math.atan((end.y-start.y)/(end.x-start.x)))} deg", (int((start.x+end.x)//2), int((start.y+end.y)//2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
     cv2.imwrite(path, color_dst)
