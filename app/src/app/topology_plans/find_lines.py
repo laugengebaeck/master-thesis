@@ -27,9 +27,9 @@ def is_line_similar(line: tuple[Point, Point], line_comp: tuple[Point, Point]) -
     # check if slopes are similar, else the lines are also not similar
     delta_y1 = abs(line[1].y - line[0].y)
     delta_x1 = abs(line[1].x - line[0].x)
-    delta_y2 = abs(line_comp[1].y - line_comp[0].x)
+    delta_y2 = abs(line_comp[1].y - line_comp[0].y)
     delta_x2 = abs(line_comp[1].x - line_comp[0].x)
-    if delta_x1 != 0 and delta_x2 != 0 and abs(delta_y1 / delta_x1 - delta_y2 / delta_x2) > 2:
+    if delta_x1 != 0 and delta_x2 != 0 and abs(delta_y1 / delta_x1 - delta_y2 / delta_x2) > 0.5:
         return False
     
     # there are usually lots of lines near each other at these symbols
@@ -37,12 +37,18 @@ def is_line_similar(line: tuple[Point, Point], line_comp: tuple[Point, Point]) -
     enddist = distance(line[1], line_comp[1])
     startdist_switched = distance(line[0], line_comp[1])
     enddist_switched = distance(line[1], line_comp[0])
-    if startdist <= SIMILAR_LINE_DISTANCE and enddist <= SIMILAR_LINE_DISTANCE:
-        return True
-    elif startdist_switched <= SIMILAR_LINE_DISTANCE and enddist_switched <= SIMILAR_LINE_DISTANCE:
-        return True
-    else:
-        return False
+
+    # very complicated implementation of "both lines go in the same direction on the x-axis from the point where they meet"
+    if startdist <= SIMILAR_LINE_DISTANCE:
+        return (line[0].x < line[1].x) == (line_comp[0].x < line_comp[1].x)
+    elif enddist <= SIMILAR_LINE_DISTANCE:
+        return (line[1].x < line[0].x) == (line_comp[1].x < line_comp[0].x)
+    elif startdist_switched <= SIMILAR_LINE_DISTANCE:
+        return (line[0].x < line[1].x) == (line_comp[1].x < line_comp[0].x)
+    elif enddist_switched <= SIMILAR_LINE_DISTANCE:
+        return (line[1].x < line[0].x) == (line_comp[0].x < line_comp[1].x)
+    
+    return False
     
 def convert_opencv_line_to_points(line) -> tuple[Point, Point]:
     line = line[0]

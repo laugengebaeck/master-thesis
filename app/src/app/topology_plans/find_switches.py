@@ -2,6 +2,11 @@ import math
 import cv2
 import numpy as np
 
+from topology_plans.point import Point
+
+MIN_SWITCH_AREA = 200
+MAX_SWITCH_AREA = 500
+
 def triangle_area(approx: cv2.typing.MatLike):
     pnt0 = approx[0][0]
     pnt1 = approx[1][0]
@@ -40,9 +45,21 @@ def detect_triangles(src: cv2.typing.MatLike):
     for cnt in contours:
         approx = cv2.approxPolyDP(
             cnt, 0.07 * cv2.arcLength(cnt, True), True)
-        if len(approx) == 3 and triangle_area(approx) >= 50 and triangle_area(approx) <= 500 and is_black_inside(src, approx):
+        # TODO black condition is good for discarding incorrect triangles, but only works for "ferngestellte Weichen"
+        if len(approx) == 3 and triangle_area(approx) >= MIN_SWITCH_AREA and triangle_area(approx) <= MAX_SWITCH_AREA and is_black_inside(src, approx):
             coordinates.append(approx)
     return coordinates
+
+def get_triangle_center_points(coordinates) -> list[Point]:
+    centers = []
+    for approx in coordinates:
+        pnt0 = approx[0][0]
+        pnt1 = approx[1][0]
+        pnt2 = approx[2][0]
+        x_middle = (pnt0[0] + pnt1[0] + pnt2[0]) // 3
+        y_middle = (pnt0[1] + pnt1[1] + pnt2[1]) // 3
+        centers.append(Point(np.int32(x_middle), np.int32(y_middle)))
+    return centers
 
 def visualize_switches(img, switches, path):
     dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
