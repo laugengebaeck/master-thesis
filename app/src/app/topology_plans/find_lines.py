@@ -2,14 +2,14 @@ import math
 import cv2
 import numpy as np
 
-from topology_plans.point import Point
+from topology_plans.vector import Vector2D
 
 SIMILAR_LINE_DISTANCE = 150
 
-def distance(point0: Point, point1: Point) -> float:
+def distance(point0: Vector2D, point1: Vector2D) -> float:
     return math.dist(point0.to_tuple(), point1.to_tuple())
 
-def is_line_angle_correct(line: tuple[Point, Point]) -> bool:
+def is_line_angle_correct(line: tuple[Vector2D, Vector2D]) -> bool:
     # check angle, special handling for lines nearly parallel to y axis
     delta_y1 = abs(line[1].y - line[0].y)
     delta_x1 = abs(line[1].x - line[0].x)
@@ -23,7 +23,7 @@ def is_line_angle_correct(line: tuple[Point, Point]) -> bool:
     return angle == 0 or abs(angle - 20) < 10 or abs(angle - 45) < 10
 
 # try removing signal symbol or text lines and similar
-def is_line_similar(line: tuple[Point, Point], line_comp: tuple[Point, Point]) -> bool:
+def is_line_similar(line: tuple[Vector2D, Vector2D], line_comp: tuple[Vector2D, Vector2D]) -> bool:
     # check if slopes are similar, else the lines are also not similar
     delta_y1 = abs(line[1].y - line[0].y)
     delta_x1 = abs(line[1].x - line[0].x)
@@ -50,11 +50,11 @@ def is_line_similar(line: tuple[Point, Point], line_comp: tuple[Point, Point]) -
     
     return False
     
-def convert_opencv_line_to_points(line) -> tuple[Point, Point]:
+def convert_opencv_line_to_points(line) -> tuple[Vector2D, Vector2D]:
     line = line[0]
-    return Point(line[0], line[1]), Point(line[2], line[3])
+    return Vector2D(line[0], line[1]), Vector2D(line[2], line[3])
     
-def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Point, Point]]:
+def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Vector2D, Vector2D]]:
     dst = cv2.Canny(src, 50, 200, None, 3)
     linesP = cv2.HoughLinesP(dst, 1, np.pi / 180, 50, None, 125, 40)
     filtered_lines = []
@@ -73,7 +73,7 @@ def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Point, Point]]:
         
     return filtered_lines
 
-def visualize_lines(img, lines: list[tuple[Point, Point]], path):
+def visualize_lines(img, lines: list[tuple[Vector2D, Vector2D]], path):
     color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     for start, end in lines:
         cv2.line(color_dst, start.to_tuple(), end.to_tuple(), (0,0,255), 3, cv2.LINE_AA)

@@ -5,22 +5,31 @@ import networkx as nx
 import numpy as np
 import shapely
 
-from topology_plans.point import Point
+from topology_plans.vector import Vector2D
 
 SAME_NODE_DIST = 200
 SPUR_MAX_LENGTH = 300
 
-# TODO this is point to line, not to line segment
-# TODO implement e.g. https://maprantala.com/2010/05/16/measuring-distance-from-a-point-to-a-line-segment-in-python/ instead
-def is_on_line_segment(given_point: Point, line_segment: tuple[Point, Point]) -> bool:
-    p1 = line_segment[0].to_ndarray()
-    p2 = line_segment[1].to_ndarray()
-    p3 = given_point.to_ndarray()
-    d = np.cross(p2-p1,p3-p1) / np.linalg.norm(p2-p1)
-    print(d)
-    return abs(float(d)) <= 10
+def dot(p1: Vector2D, p2: Vector2D) -> int:
+    return int(p1.x * p2.x + p1.y * p2.y)
 
-def line_intersection(line1: tuple[Point, Point], line2: tuple[Point, Point]) -> Point | None:
+# measures distance between point p and line segment vw
+# https://stackoverflow.com/a/1501725
+def dist_point_line_segment(p: Vector2D, line_segment: tuple[Vector2D, Vector2D]) -> float:
+    v, w = line_segment
+    l_vw_squared = (v.x - w.x) ** 2 + (v.y - w.y) ** 2
+    if l_vw_squared == 0: 
+        return math.dist(p.to_tuple(), v.to_tuple())
+    
+    # Consider the line extending the segment, parameterized as v + t (w - v).
+    # We find projection of point p onto the line. 
+    # It falls where t = [(p-v) . (w-v)] / |w-v|^2
+    # We clamp t from [0,1] to handle points outside the segment vw.
+    t = max(0, min(1, float(dot(p - v, w - v) / l_vw_squared)));
+    projection = v + t * (w - v);  # Projection falls on the segment
+    return math.dist(p.to_tuple(), projection.to_tuple())
+
+def line_intersection(line1: tuple[Vector2D, Vector2D], line2: tuple[Vector2D, Vector2D]) -> Vector2D | None:
     u1, v1 = line1
     u2, v2 = line2
     ls1 = shapely.geometry.LineString([u1.to_tuple(), v1.to_tuple()])
@@ -29,12 +38,12 @@ def line_intersection(line1: tuple[Point, Point], line2: tuple[Point, Point]) ->
         return None
     intersection = ls1.intersection(ls2)
     if isinstance(intersection, shapely.geometry.Point):
-        return Point(np.int32(intersection.x), np.int32(intersection.y))
+        return Vector2D(np.int32(intersection.x), np.int32(intersection.y))
     else:
         return None
 
 # split lines into segments intersecting only at end points to facilitate graph creation
-def split_into_segments(lines: list[tuple[Point, Point]]) -> list[tuple[Point, Point]]:
+def split_into_segments(lines: list[tuple[Vector2D, Vector2D]]) -> list[tuple[Vector2D, Vector2D]]:
     finished_lines = []
     lines_to_process = lines
 
@@ -56,7 +65,7 @@ def split_into_segments(lines: list[tuple[Point, Point]]) -> list[tuple[Point, P
     return finished_lines
 
 
-def create_graph(lines: list[tuple[Point, Point]]) -> nx.Graph:
+def create_graph(lines: list[tuple[Vector2D, Vector2D]]) -> nx.Graph:
     topology = nx.Graph()
 
     lines = split_into_segments(lines)
@@ -79,7 +88,7 @@ def create_graph(lines: list[tuple[Point, Point]]) -> nx.Graph:
     topology = remove_nodes_on_other_edges(topology)
     largest_cc = max(nx.connected_components(topology), key=len)
     topology = topology.subgraph(largest_cc).copy()
-    # topology = contract_paths(topology)
+    topology = contract_paths(topology)
     return topology
 
 def remove_spurs(G: nx.Graph) -> nx.Graph:
@@ -94,8 +103,8 @@ def remove_nodes_on_other_edges(G: nx.Graph) -> nx.Graph:
     for node in G.nodes:
         if G.degree[node] == 1: # type: ignore
             for edge in G.edges:
-                if node != edge[0] and node != edge[1] and is_on_line_segment(Point.from_tuple(node), (Point.from_tuple(edge[0]), Point.from_tuple(edge[1]))):
-                    print(f"removing {node} because of edge {edge}")
+                distance = dist_point_line_segment(Vector2D.from_tuple(node), (Vector2D.from_tuple(edge[0]), Vector2D.from_tuple(edge[1])))
+                if node != edge[0] and node != edge[1] and edge[0] not in nodes_to_remove and edge[1] not in nodes_to_remove and distance <= 5:
                     nodes_to_remove.append(node)
                     break
     for node in nodes_to_remove:
@@ -105,9 +114,6 @@ def remove_nodes_on_other_edges(G: nx.Graph) -> nx.Graph:
 def contract_paths(G: nx.Graph) -> nx.Graph:
     for node in G.nodes:
         if G.degree[node] == 2: # type: ignore
-            # only contract if all edges incident to that node are parallel to x axis
-            if not all(abs(u[1] - v[1]) <= 10 for u, v in G.edges(node)):
-                continue
             (u, v), _ = G.edges(node) # only take the first edge
             # choose order so that correct node is deleted during contraction
             if u == node:
@@ -127,7 +133,7 @@ def visualize_graph(img: cv2.typing.MatLike, G: nx.Graph, path: str):
         cv2.line(color_dst, u, v, (0,0,255), 3, cv2.LINE_AA)
     cv2.imwrite(path, color_dst)
 
-def check_created_graph(G: nx.Graph, detected_switch_positions: list[Point]):
+def check_created_graph(G: nx.Graph, detected_switch_positions: list[Vector2D]):
     for node in G.nodes:
         if G.degree[node] >= 4: # type: ignore
             print(f"In the created topology, node {node} has more than 3 neighbors. That's wrong.")
