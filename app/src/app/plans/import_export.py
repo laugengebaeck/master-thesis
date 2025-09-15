@@ -1,5 +1,7 @@
 import os
+
 import pandas as pd
+
 
 def plan_export(tables: list[pd.DataFrame], plan_type: str, original_path: str):
     plan_name = original_path.split("/")[-1].split("_")[0]

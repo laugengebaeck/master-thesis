@@ -1,21 +1,23 @@
-from PIL import Image
-from img2table.document import Image as I2T_Image, PDF
+import pandas as pd
+from img2table.document import Image as I2T_Image
 from img2table.ocr import DocTR
-
+from PIL import Image
 from util import pillow_image_to_bytes
 
-import pandas as pd
 
-def table_perform_ocr(table_image: Image.Image, min_confidence: int, det_arch: str = "db_resnet50") -> pd.DataFrame:
+def table_perform_ocr(
+    table_image: Image.Image, min_confidence: int, det_arch: str = "db_resnet50"
+) -> pd.DataFrame:
     doc = I2T_Image(pillow_image_to_bytes(table_image))
-    ocr = DocTR(detect_language=False, kw={
-            "det_arch": det_arch, 
-            "reco_arch": "crnn_vgg16_bn", 
-            "pretrained": True})
+    ocr = DocTR(
+        detect_language=False,
+        kw={"det_arch": det_arch, "reco_arch": "crnn_vgg16_bn", "pretrained": True},
+    )
     extracted_tables = doc.extract_tables(ocr=ocr, min_confidence=min_confidence)
     if len(extracted_tables) > 1:
         raise ValueError("Image contains more than one table.")
     return extracted_tables[0].df
+
 
 # TODO move
 def get_value(df: pd.DataFrame, i: int, j: int) -> str | None:
@@ -23,6 +25,7 @@ def get_value(df: pd.DataFrame, i: int, j: int) -> str | None:
         return None
     value = df.iat[i, j]
     return str(value) if not pd.isna(value) else None
+
 
 def table_perform_ocr_multiple(table_image: Image.Image, min_confidence: int):
     det_archs = ["db_resnet50", "fast_base"]
@@ -34,10 +37,15 @@ def table_perform_ocr_multiple(table_image: Image.Image, min_confidence: int):
                 cell_value = get_value(df, i, j)
                 if end_value is None and cell_value is not None:
                     end_value = cell_value
-                    print(f"table {idx}: found value not previously found for ({i}, {j}): None -> {cell_value}")
+                    print(
+                        f"table {idx}: found value not previously found for ({i}, {j}): None -> {cell_value}"
+                    )
                 elif cell_value is not None and cell_value != end_value:
-                    print(f"table {idx}: cell has different value than before (should not happen!) for {i}, {j}: {end_value} -> {cell_value}")
+                    print(
+                        f"table {idx}: cell has different value than before (should not happen!) for {i}, {j}: {end_value} -> {cell_value}"
+                    )
     return table_dfs[0]
+
 
 def tables_perform_ocr(table_images: list[Image.Image], min_confidence: int) -> list[pd.DataFrame]:
     # return [table_perform_ocr_multiple(table_images[0], min_confidence)]

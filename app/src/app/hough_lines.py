@@ -1,12 +1,15 @@
 import cv2
 import numpy as np
-from zipfile import ZipFile
-
-from util import pillow_image_to_bytes
 from tables.crop import pdf_convert_to_images
 from topology_plans.find_lines import detect_lines, visualize_lines
-from topology_plans.find_switches import detect_triangles, get_triangle_center_points, visualize_switches
+from topology_plans.find_switches import (
+    detect_triangles,
+    get_triangle_center_points,
+    visualize_switches,
+)
 from topology_plans.topology_graph import check_created_graph, create_graph, visualize_graph
+from util import pillow_image_to_bytes
+
 
 def main():
     # load PDF
@@ -18,9 +21,9 @@ def main():
 
     # Check if image is loaded fine
     if src is None:
-        print ('Error opening image!')
+        print("Error opening image!")
         return -1
-    
+
     lines = detect_lines(src)
     visualize_lines(src, lines, "detected_probabilistic.jpg")
 
@@ -31,6 +34,7 @@ def main():
     visualize_switches(src, triangles, "detected_triangles.png")
 
     check_created_graph(topology, get_triangle_center_points(triangles))
+
 
 if __name__ == "__main__":
     main()

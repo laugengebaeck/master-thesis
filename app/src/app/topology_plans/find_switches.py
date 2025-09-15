@@ -1,11 +1,12 @@
 import math
+
 import cv2
 import numpy as np
-
 from topology_plans.vector import Vector2D
 
 MIN_SWITCH_AREA = 200
 MAX_SWITCH_AREA = 500
+
 
 def triangle_area(approx: cv2.typing.MatLike):
     pnt0 = approx[0][0]
@@ -19,10 +20,11 @@ def triangle_area(approx: cv2.typing.MatLike):
     # Heron's formula
     return math.sqrt(s * (s - a) * (s - b) * (s - c))
 
+
 # see https://stackoverflow.com/questions/60964249/how-to-check-the-color-of-pixels-inside-a-polygon-and-remove-the-polygon-if-it-c
 # counts number of white pixels
 def is_black_inside(img: cv2.typing.MatLike, triangle: cv2.typing.MatLike):
-    points = np.asarray(triangle[:,:])
+    points = np.asarray(triangle[:, :])
     mask = np.zeros_like(img)
     cv2.fillPoly(mask, [points], (255))
     values = img[np.where(mask == 255)]
@@ -32,23 +34,28 @@ def is_black_inside(img: cv2.typing.MatLike, triangle: cv2.typing.MatLike):
             count += 1
     return count <= 5
 
+
 def detect_triangles(src: cv2.typing.MatLike):
     kernel = np.ones((4, 4), np.uint8)
     dilation = cv2.dilate(src, kernel, iterations=1)
     blur = cv2.GaussianBlur(dilation, (5, 5), 0)
     thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
 
-    contours, _ = cv2.findContours(
-        thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    
+    contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
     coordinates = []
     for cnt in contours:
-        approx = cv2.approxPolyDP(
-            cnt, 0.07 * cv2.arcLength(cnt, True), True)
+        approx = cv2.approxPolyDP(cnt, 0.07 * cv2.arcLength(cnt, True), True)
         # TODO black condition is good for discarding incorrect triangles, but only works for "ferngestellte Weichen"
-        if len(approx) == 3 and triangle_area(approx) >= MIN_SWITCH_AREA and triangle_area(approx) <= MAX_SWITCH_AREA and is_black_inside(src, approx):
+        if (
+            len(approx) == 3
+            and triangle_area(approx) >= MIN_SWITCH_AREA
+            and triangle_area(approx) <= MAX_SWITCH_AREA
+            and is_black_inside(src, approx)
+        ):
             coordinates.append(approx)
     return coordinates
+
 
 def get_triangle_center_points(coordinates) -> list[Vector2D]:
     centers = []
@@ -60,6 +67,7 @@ def get_triangle_center_points(coordinates) -> list[Vector2D]:
         y_middle = (pnt0[1] + pnt1[1] + pnt2[1]) // 3
         centers.append(Vector2D.from_tuple((x_middle, y_middle)))
     return centers
+
 
 def visualize_switches(img, switches, path):
     dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)

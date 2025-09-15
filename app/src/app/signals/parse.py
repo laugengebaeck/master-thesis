@@ -1,10 +1,24 @@
+import logging
+
+import pandas as pd
+from yaramo.additional_signal import (
+    AdditionalSignalZs2,
+    AdditionalSignalZs2v,
+    AdditionalSignalZs3,
+    AdditionalSignalZs3v,
+)
 from yaramo.edge import Edge
 from yaramo.node import Node
-from yaramo.signal import Signal, SignalDirection, SignalFunction, SignalKind, SignalState, SignalSystem, AdditionalSignal
-from yaramo.additional_signal import AdditionalSignalZs2, AdditionalSignalZs2v, AdditionalSignalZs3, AdditionalSignalZs3v
+from yaramo.signal import (
+    AdditionalSignal,
+    Signal,
+    SignalDirection,
+    SignalFunction,
+    SignalKind,
+    SignalState,
+    SignalSystem,
+)
 
-import logging
-import pandas as pd
 
 # splits in classification number and short name
 def split_signal_name(signal_name: str) -> tuple[str, str]:
@@ -13,12 +27,17 @@ def split_signal_name(signal_name: str) -> tuple[str, str]:
     else:
         return signal_name[:2], signal_name[2:]
 
+
 # uses short signal name (without classification number)
 def get_signal_function(signal_name: str):
     # TODO Logik deckt noch nicht alle Fälle ab
     if signal_name[0] == "V":
         return SignalFunction.Vorsignal_Vorsignalwiederholer
-    elif signal_name[0] == "Z" and signal_name[1] in ["R", "S", "T", "U", "V", "W"] and signal_name[2:].isdigit():
+    elif (
+        signal_name[0] == "Z"
+        and signal_name[1] in ["R", "S", "T", "U", "V", "W"]
+        and signal_name[2:].isdigit()
+    ):
         return SignalFunction.Zwischen_Signal
     elif signal_name[0] == "L":
         # Sperrsignale grundsaetzlich "andere", außer wenn Ziel einer Zugfahrt
@@ -26,20 +45,27 @@ def get_signal_function(signal_name: str):
         return SignalFunction.andere
     elif signal_name[0] in ["N", "P", "O", "Q"] and signal_name[1:].isdigit():
         return SignalFunction.Ausfahr_Signal
-    elif signal_name[0] in ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"] and (len(signal_name) == 1 or (len(signal_name) == 2 and signal_name[0] == signal_name[1])):
+    elif signal_name[0] in ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"] and (
+        len(signal_name) == 1 or (len(signal_name) == 2 and signal_name[0] == signal_name[1])
+    ):
         return SignalFunction.Einfahr_Signal
     elif signal_name.isdigit():
         return SignalFunction.Block_Signal
     else:
         return SignalFunction.andere
-    
+
+
 def get_signal_kind(df: pd.DataFrame, col: int) -> SignalKind:
     hp0_cell = df.iat[20, col]
     ks_cell = df.iat[21, col]
     ra_sh_cell = df.iat[22, col]
 
-    is_main_signal = not pd.isna(hp0_cell) and not pd.isna(ks_cell) and "0" in str(hp0_cell) # Hp0 + mindestens 1 Ks = Hauptsignal
-    is_distant_signal = not pd.isna(ks_cell) and "2" in str(ks_cell) # Ks2 nur wenn Vorsignalfunktion
+    is_main_signal = (
+        not pd.isna(hp0_cell) and not pd.isna(ks_cell) and "0" in str(hp0_cell)
+    )  # Hp0 + mindestens 1 Ks = Hauptsignal
+    is_distant_signal = not pd.isna(ks_cell) and "2" in str(
+        ks_cell
+    )  # Ks2 nur wenn Vorsignalfunktion
     is_shunting_signal = not pd.isna(ra_sh_cell)
 
     if is_main_signal:
@@ -56,17 +82,17 @@ def get_signal_kind(df: pd.DataFrame, col: int) -> SignalKind:
             return SignalKind.Vorsignal
     elif is_shunting_signal:
         return SignalKind.Sperrsignal
-    
+
     return SignalKind.andere
-        
-    
+
+
 def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
     states = set()
 
     hp0_cell = df.iat[20, col]
     if not pd.isna(hp0_cell) and str(hp0_cell) == "0":
         states.add(SignalState.HP0)
-    
+
     ks_cell = df.iat[21, col]
     if not pd.isna(ks_cell):
         if "1" in str(ks_cell):
@@ -91,7 +117,7 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
 
     if "1" in zs_signal_strings and "7" in zs_signal_strings:
         logging.warning(f"column {col}: Zs1 and Zs7 should not occur together")
-    
+
     for zs in zs_signal_strings:
         if "1" in zs_signal_strings:
             states.add(SignalState.ZS1)
@@ -121,7 +147,7 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
     zs3v_cell = df.iat[19, col]
     if not pd.isna(zs3v_cell):
         states.add(SignalState.ZS3V)
-    
+
     kl_zl_cell = df.iat[24, col]
     if not pd.isna(kl_zl_cell):
         kl_zl_str = str(kl_zl_cell)
@@ -148,6 +174,7 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
 
     return states
 
+
 def cell_to_zs3_symbols(cell_content: str) -> list[AdditionalSignalZs3.AdditionalSignalSymbolZs3]:
     zs3_symbols = []
     for number_str in cell_content.split(","):
@@ -163,9 +190,23 @@ def cell_to_zs3_symbols(cell_content: str) -> list[AdditionalSignalZs3.Additiona
             zs3_symbols.append(AdditionalSignalZs3.AdditionalSignalSymbolZs3(number))
     return zs3_symbols
 
+
 def cell_to_zs2_symbols(cell_content: str) -> list[AdditionalSignalZs2.AdditionalSignalSymbolZs2]:
-    is_valid_symbol = lambda letter: len(list(filter(lambda enum: enum.value == letter, AdditionalSignalZs2.AdditionalSignalSymbolZs2))) != 0
-    return [AdditionalSignalZs2.AdditionalSignalSymbolZs2(letter.strip()) for letter in cell_content.split(",") if is_valid_symbol(letter)]
+    is_valid_symbol = (
+        lambda letter: len(
+            list(
+                filter(
+                    lambda enum: enum.value == letter, AdditionalSignalZs2.AdditionalSignalSymbolZs2
+                )
+            )
+        )
+        != 0
+    )
+    return [
+        AdditionalSignalZs2.AdditionalSignalSymbolZs2(letter.strip())
+        for letter in cell_content.split(",")
+        if is_valid_symbol(letter)
+    ]
 
 
 def get_additional_signals(df: pd.DataFrame, col: int) -> list[AdditionalSignal]:
@@ -191,6 +232,7 @@ def get_additional_signals(df: pd.DataFrame, col: int) -> list[AdditionalSignal]
 
     return add_signals
 
+
 def get_side_distance(df: pd.DataFrame, col: int) -> int | None:
     distance_left_cell = df.iat[36, col]
     distance_right_cell = df.iat[37, col]
@@ -208,7 +250,7 @@ def get_side_distance(df: pd.DataFrame, col: int) -> int | None:
             return int(str(distance_right_cell))
     else:
         logging.warning(f"column {col}: No side distance for signal given")
-    
+
     return None
 
 
@@ -216,7 +258,7 @@ def parse_signal_column(df: pd.DataFrame, col: int) -> Signal | None:
     main_signal_cell = df.iat[0, col]
     shunting_signal_cell = df.iat[1, col]
     misc_signal_cell = df.iat[2, col]
-    
+
     full_signal_name = ""
     if not pd.isna(main_signal_cell):
         full_signal_name = str(main_signal_cell)
@@ -231,16 +273,16 @@ def parse_signal_column(df: pd.DataFrame, col: int) -> Signal | None:
     classification_number, signal_name = split_signal_name(full_signal_name)
 
     signal = Signal(
-        name = signal_name,
-        edge = Edge(Node(), Node()), # TODO fill later
-        distance_edge = 42, # TODO fill later
-        direction = SignalDirection.IN, # TODO fill later
-        function = get_signal_function(signal_name),
-        kind = get_signal_kind(df, col),
-        system = SignalSystem.Ks,
-        side_distance = get_side_distance(df, col), # type: ignore
-        supported_states = get_signal_states(df, col),
-        classification_number = classification_number,
+        name=signal_name,
+        edge=Edge(Node(), Node()),  # TODO fill later
+        distance_edge=42,  # TODO fill later
+        direction=SignalDirection.IN,  # TODO fill later
+        function=get_signal_function(signal_name),
+        kind=get_signal_kind(df, col),
+        system=SignalSystem.Ks,
+        side_distance=get_side_distance(df, col),  # type: ignore
+        supported_states=get_signal_states(df, col),
+        classification_number=classification_number,
     )
 
     signal.additional_signals = get_additional_signals(df, col)

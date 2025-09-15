@@ -1,6 +1,7 @@
+from dataclasses import dataclass
+
 import numpy as np
 
-from dataclasses import dataclass
 
 @dataclass
 class Vector2D:
@@ -9,19 +10,19 @@ class Vector2D:
 
     def to_tuple(self) -> tuple[int, int]:
         return int(self.x), int(self.y)
-    
+
     def to_ndarray(self) -> np.ndarray:
         return np.array([self.x, self.y])
-    
+
     def __add__(self, other):
         return Vector2D(self.x + other.x, self.y + other.y)
-    
+
     def __sub__(self, other):
         return Vector2D(self.x - other.x, self.y - other.y)
-    
+
     def __rmul__(self, factor):
         return Vector2D(factor * self.x, factor * self.y)
-    
+
     @staticmethod
     def from_tuple(tup: tuple[int, int]):
         return Vector2D(np.int32(tup[0]), np.int32(tup[1]))
