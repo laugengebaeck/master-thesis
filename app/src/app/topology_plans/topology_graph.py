@@ -109,7 +109,6 @@ def create_graph(lines: list[tuple[Vector2D, Vector2D]]) -> nx.Graph:
     topology = remove_nodes_on_other_edges(topology)
     largest_cc = max(nx.connected_components(topology), key=len)
     topology = topology.subgraph(largest_cc).copy()
-    topology = contract_paths(topology)
     return topology
 
 
@@ -141,18 +140,6 @@ def remove_nodes_on_other_edges(G: nx.Graph) -> nx.Graph:
                     break
     for node in nodes_to_remove:
         G.remove_node(node)
-    return G
-
-
-def contract_paths(G: nx.Graph) -> nx.Graph:
-    for node in G.nodes:
-        if G.degree[node] == 2:  # type: ignore
-            (u, v), _ = G.edges(node)  # only take the first edge
-            # choose order so that correct node is deleted during contraction
-            if u == node:
-                G = nx.contracted_edge(G, (v, u), self_loops=False)
-            elif v == node:
-                G = nx.contracted_edge(G, (u, v), self_loops=False)
     return G
 
 

@@ -1043,6 +1043,26 @@ test = ["pytest (>=7.2)", "pytest-cov (>=4.0)", "pytest-xdist (>=3.0)"]
 test-extras = ["pytest-mpl", "pytest-randomly"]
 
 [[package]]
+name = "networkx-importer"
+version = "0.1.0"
+description = "This tool converts networkx graphs into yaramo models."
+optional = false
+python-versions = ">=3.13, <4.0"
+groups = ["main"]
+files = []
+develop = false
+
+[package.dependencies]
+networkx = ">=3.5,<4.0"
+yaramo = {git = "https://github.com/simulate-digital-rail/yaramo", rev = "yaramo2"}
+
+[package.source]
+type = "git"
+url = "https://github.com/laugengebaeck/yaramo-networkx-importer"
+reference = "HEAD"
+resolved_reference = "dd2f4da6c393ec4da55dec033eae7627fd94d9cb"
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 description = "Node.js virtual environment builder"
@@ -2876,4 +2896,4 @@ resolved_reference = "ce20b43f2a634e4e4414273b2cf753d3653e6eda"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "f3a60a9e3c14f2144e293fa7bcce120b73c2a0cc670b6583da60dd1c8cc54be6"
+content-hash = "38e3f4540005c597036d72bf6243962d61c3f469a32d6d882dabad64bb15c91e"
