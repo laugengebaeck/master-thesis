@@ -39,7 +39,9 @@ def detect_triangles(src: cv2.typing.MatLike):
     kernel = np.ones((4, 4), np.uint8)
     dilation = cv2.dilate(src, kernel, iterations=1)
     blur = cv2.GaussianBlur(dilation, (5, 5), 0)
-    thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
+    thresh = cv2.adaptiveThreshold(
+        blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
+    )
 
     contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 

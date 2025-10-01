@@ -17,10 +17,6 @@ def is_line_angle_correct(line: tuple[Vector2D, Vector2D]) -> bool:
     delta_x1 = abs(line[1].x - line[0].x)
     angle = abs(math.degrees(math.atan(delta_y1 / delta_x1))) if delta_x1 >= 10 else 90
 
-    # we regard angles that differ by a multiple of 90 degrees as the same
-    while round(angle) > 90:
-        angle -= 90
-
     # reject 90 degrees angles, allow 0, ~20 and ~45 degree angles
     return angle == 0 or abs(angle - 20) < 10 or abs(angle - 45) < 10
 
@@ -67,6 +63,7 @@ def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Vector2D, Vector2D]]:
     if linesP is not None:
         linesP = list(
             filter(
+                # TODO wieso laenge nicht einfach direkt in HoughLines? -> gibt andere ergebnisse??
                 lambda l: is_line_angle_correct(l) and distance(l[0], l[1]) >= 400,
                 map(convert_opencv_line_to_points, linesP),
             )
