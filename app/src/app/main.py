@@ -31,7 +31,7 @@ def topology_main():
     path_pachl = "../../Planungen_PT1/Pachl_Bild_4-16.png"
 
     if is_pdf:
-        with open(path_forchheim, "rb") as pdf_file:
+        with open(path_forchheim_full, "rb") as pdf_file:
             pdf_bytes = pdf_file.read()
             page_image = pillow_image_to_bytes(convert_pdf_to_images(pdf_bytes)[0])
             page_np = np.frombuffer(page_image, dtype=np.uint8)
