@@ -3,15 +3,15 @@ import numpy as np
 from networkx_importer import NetworkxImporter
 from plans.load import load_plans
 from plans.read import PlanReaderType
-from tables.crop import pdf_convert_to_images
 from topology_plans.find_lines import detect_lines, visualize_lines
 from topology_plans.find_switches import (
     detect_triangles,
     get_triangle_center_points,
     visualize_switches,
 )
+from topology_plans.thresholds import TopologyThresholds
 from topology_plans.topology_graph import check_created_graph, create_graph, visualize_graph
-from util import pillow_image_to_bytes
+from util import convert_pdf_to_images, pillow_image_to_bytes
 
 
 def table_main():
@@ -23,29 +23,39 @@ def table_main():
 
 def topology_main():
     # load PDF
+    is_pdf = True
     path_phausen = "../../Planungen_PT1/2019-10-30_PT1_ÄM02/PHSUxx50-Bl2.pdf"
     path_forchheim = "../../Planungen_PT1/Forchheim_Ausschnitt_scanned.pdf"
-    with open(path_forchheim, "rb") as pdf_file:
-        pdf_bytes = pdf_file.read()
-        page_image = pillow_image_to_bytes(pdf_convert_to_images(pdf_bytes)[0])
-        page_np = np.frombuffer(page_image, dtype=np.uint8)
-        src = cv2.imdecode(page_np, cv2.IMREAD_GRAYSCALE)
+    path_forchheim_full = "../../Planungen_PT1/Forchheim_PT1_scanned.pdf"
+    path_maschek = "../../Planungen_PT1/Maschek_Bild_10-7.png"
+    path_pachl = "../../Planungen_PT1/Pachl_Bild_4-16.png"
+
+    if is_pdf:
+        with open(path_forchheim, "rb") as pdf_file:
+            pdf_bytes = pdf_file.read()
+            page_image = pillow_image_to_bytes(convert_pdf_to_images(pdf_bytes)[0])
+            page_np = np.frombuffer(page_image, dtype=np.uint8)
+            src = cv2.imdecode(page_np, cv2.IMREAD_GRAYSCALE)
+    else:
+        src = cv2.imread(path_pachl, cv2.IMREAD_GRAYSCALE)
 
     # Check if image is loaded fine
     if src is None:
         print("Error opening image!")
         return -1
 
-    lines = detect_lines(src)
+    thresholds = TopologyThresholds(*src.shape)
+
+    lines = detect_lines(src, thresholds)
     visualize_lines(src, lines, "detected_probabilistic.png")
 
-    topology = create_graph(lines)
+    topology = create_graph(lines, thresholds)
     visualize_graph(src, topology, "topology_graph_overlay.png")
 
-    triangles = detect_triangles(src)
+    triangles = detect_triangles(src, thresholds)
     visualize_switches(src, triangles, "detected_triangles.png")
 
-    check_created_graph(topology, get_triangle_center_points(triangles))
+    check_created_graph(topology, get_triangle_center_points(triangles), thresholds)
 
     yaramo = NetworkxImporter(topology).run()
     with open("export/yaramo_topology.json", "w") as file:

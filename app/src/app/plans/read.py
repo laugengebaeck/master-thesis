@@ -3,8 +3,9 @@ from enum import Enum
 
 import pandas as pd
 from img2table.document import PDF
-from tables.crop import pdf_convert_to_images, pdf_get_table_images
+from tables.crop import pdf_get_table_images
 from tables.ocr import tables_perform_ocr
+from util import convert_pdf_to_images
 
 
 class PlanReaderType(Enum):
@@ -29,7 +30,7 @@ class PdfTextPlanReader(PlanReader):
 
 class ImageUnoptimizedPlanReader(PlanReader):
     def read_tables(self, pdf_file: bytes) -> list[pd.DataFrame]:
-        table_images = pdf_convert_to_images(pdf_file)
+        table_images = convert_pdf_to_images(pdf_file)
         # ignore min_confidence to get all text the OCR can detect
         return tables_perform_ocr(table_images, min_confidence=0)
 

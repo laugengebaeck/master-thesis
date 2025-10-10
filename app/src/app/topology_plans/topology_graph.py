@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import shapely
+from topology_plans.thresholds import TopologyThresholds
 from topology_plans.vector import Vector2D
 
 SAME_NODE_DIST = 200
 SPUR_MAX_LENGTH = 300
+ON_EDGE_DIST = 5
 
 
 def dot(p1: Vector2D, p2: Vector2D) -> int:
@@ -86,7 +88,9 @@ def split_into_segments(lines: list[tuple[Vector2D, Vector2D]]) -> list[tuple[Ve
     return finished_lines
 
 
-def create_graph(lines: list[tuple[Vector2D, Vector2D]]) -> nx.Graph:
+def create_graph(
+    lines: list[tuple[Vector2D, Vector2D]], thresholds: TopologyThresholds
+) -> nx.Graph:
     topology = nx.Graph()
 
     lines = split_into_segments(lines)
@@ -97,29 +101,29 @@ def create_graph(lines: list[tuple[Vector2D, Vector2D]]) -> nx.Graph:
         end = end_pt.to_tuple()
         if len(topology.nodes) > 0:
             start_closest = min(topology.nodes, key=lambda node: math.dist(start, node))
-            if math.dist(start, start_closest) <= SAME_NODE_DIST:
+            if math.dist(start, start_closest) <= thresholds.same_node_distance():
                 start = start_closest
             end_closest = min(topology.nodes, key=lambda node: math.dist(end, node))
-            if math.dist(end, end_closest) <= SAME_NODE_DIST:
+            if math.dist(end, end_closest) <= thresholds.same_node_distance():
                 end = end_closest
         if start != end:
             topology.add_edge(start, end)
 
-    topology = remove_spurs(topology)
-    topology = remove_nodes_on_other_edges(topology)
+    topology = remove_spurs(topology, thresholds.max_spur_length())
+    topology = remove_nodes_on_other_edges(topology, thresholds.on_edge_dist())
     largest_cc = max(nx.connected_components(topology), key=len)
     topology = topology.subgraph(largest_cc).copy()
     return topology
 
 
-def remove_spurs(G: nx.Graph) -> nx.Graph:
+def remove_spurs(G: nx.Graph, max_spur_length: int) -> nx.Graph:
     for u, v in G.edges:
-        if math.dist(u, v) <= SPUR_MAX_LENGTH and (G.degree[u] == 1 or G.degree[v] == 1):  # type: ignore
+        if math.dist(u, v) <= max_spur_length and (G.degree[u] == 1 or G.degree[v] == 1):  # type: ignore
             G.remove_edge(u, v)
     return G
 
 
-def remove_nodes_on_other_edges(G: nx.Graph) -> nx.Graph:
+def remove_nodes_on_other_edges(G: nx.Graph, on_edge_dist: int) -> nx.Graph:
     # nodes of degree 1, that are on edges, but not the edge's endpoint, are an artifact and can just be deleted
     nodes_to_remove = []
     for node in G.nodes:
@@ -134,7 +138,7 @@ def remove_nodes_on_other_edges(G: nx.Graph) -> nx.Graph:
                     and node != edge[1]
                     and edge[0] not in nodes_to_remove
                     and edge[1] not in nodes_to_remove
-                    and distance <= 5
+                    and distance <= on_edge_dist
                 ):
                     nodes_to_remove.append(node)
                     break
@@ -155,11 +159,13 @@ def visualize_graph(img: cv2.typing.MatLike, G: nx.Graph, path: str):
     cv2.imwrite(path, color_dst)
 
 
-def check_created_graph(G: nx.Graph, detected_switch_positions: list[Vector2D]):
+def check_created_graph(
+    G: nx.Graph, detected_switch_positions: list[Vector2D], thresholds: TopologyThresholds
+):
     for node in G.nodes:
         if G.degree[node] >= 4:  # type: ignore
             print(f"In the created topology, node {node} has more than 3 neighbors. That's wrong.")
-        if G.degree[node] == 3 and all(math.dist(node, switch.to_tuple()) > 200 for switch in detected_switch_positions):  # type: ignore
+        if G.degree[node] == 3 and all(math.dist(node, switch.to_tuple()) > thresholds.same_node_distance() for switch in detected_switch_positions):  # type: ignore
             # TODO umgekehrt auch Dreieck, aber keine Weiche
             print(
                 f"In the created topology, node {node} functions as a switch, but no switch symbol was found there. That's probably wrong."

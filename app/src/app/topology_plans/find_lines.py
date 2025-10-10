@@ -2,9 +2,12 @@ import math
 
 import cv2
 import numpy as np
+from topology_plans.thresholds import TopologyThresholds
 from topology_plans.vector import Vector2D
 
 SIMILAR_LINE_DISTANCE = 150
+MIN_LINE_LENGTH = 125
+MAX_LINE_GAP = 40
 
 
 def distance(point0: Vector2D, point1: Vector2D) -> float:
@@ -22,7 +25,9 @@ def is_line_angle_correct(line: tuple[Vector2D, Vector2D]) -> bool:
 
 
 # try removing signal symbol or text lines and similar
-def is_line_similar(line: tuple[Vector2D, Vector2D], line_comp: tuple[Vector2D, Vector2D]) -> bool:
+def is_line_similar(
+    line: tuple[Vector2D, Vector2D], line_comp: tuple[Vector2D, Vector2D], similar_line_dist: int
+) -> bool:
     # check if slopes are similar, else the lines are also not similar
     delta_y1 = abs(line[1].y - line[0].y)
     delta_x1 = abs(line[1].x - line[0].x)
@@ -38,13 +43,13 @@ def is_line_similar(line: tuple[Vector2D, Vector2D], line_comp: tuple[Vector2D, 
     enddist_switched = distance(line[1], line_comp[0])
 
     # very complicated implementation of "both lines go in the same direction on the x-axis from the point where they meet"
-    if startdist <= SIMILAR_LINE_DISTANCE:
+    if startdist <= similar_line_dist:
         return (line[0].x < line[1].x) == (line_comp[0].x < line_comp[1].x)
-    elif enddist <= SIMILAR_LINE_DISTANCE:
+    elif enddist <= similar_line_dist:
         return (line[1].x < line[0].x) == (line_comp[1].x < line_comp[0].x)
-    elif startdist_switched <= SIMILAR_LINE_DISTANCE:
+    elif startdist_switched <= similar_line_dist:
         return (line[0].x < line[1].x) == (line_comp[1].x < line_comp[0].x)
-    elif enddist_switched <= SIMILAR_LINE_DISTANCE:
+    elif enddist_switched <= similar_line_dist:
         return (line[1].x < line[0].x) == (line_comp[0].x < line_comp[1].x)
 
     return False
@@ -55,16 +60,19 @@ def convert_opencv_line_to_points(line) -> tuple[Vector2D, Vector2D]:
     return Vector2D(line[0], line[1]), Vector2D(line[2], line[3])
 
 
-def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Vector2D, Vector2D]]:
+def detect_lines(
+    src: cv2.typing.MatLike, thresholds: TopologyThresholds
+) -> list[tuple[Vector2D, Vector2D]]:
     dst = cv2.Canny(src, 50, 200, None, 3)
-    linesP = cv2.HoughLinesP(dst, 1, np.pi / 180, 50, None, 125, 40)
+    linesP = cv2.HoughLinesP(
+        dst, 1, np.pi / 180, 50, None, thresholds.min_line_length(), thresholds.max_line_gap()
+    )
     filtered_lines = []
 
     if linesP is not None:
         linesP = list(
             filter(
-                # TODO wieso laenge nicht einfach direkt in HoughLines? -> gibt andere ergebnisse??
-                lambda l: is_line_angle_correct(l) and distance(l[0], l[1]) >= 400,
+                lambda l: is_line_angle_correct(l),
                 map(convert_opencv_line_to_points, linesP),
             )
         )
@@ -72,9 +80,9 @@ def detect_lines(src: cv2.typing.MatLike) -> list[tuple[Vector2D, Vector2D]]:
             found_flag = False
             for l_comp in linesP:
                 # always keep the longest of the similar lines
-                if is_line_similar(l, l_comp) and distance(l[0], l[1]) < distance(
-                    l_comp[0], l_comp[1]
-                ):
+                if is_line_similar(l, l_comp, thresholds.similar_line_distance()) and distance(
+                    l[0], l[1]
+                ) < distance(l_comp[0], l_comp[1]):
                     found_flag = True
                     break
             if not found_flag:

@@ -2,6 +2,7 @@ import math
 
 import cv2
 import numpy as np
+from topology_plans.thresholds import TopologyThresholds
 from topology_plans.vector import Vector2D
 
 MIN_SWITCH_AREA = 200
@@ -35,7 +36,10 @@ def is_black_inside(img: cv2.typing.MatLike, triangle: cv2.typing.MatLike):
     return count <= 5
 
 
-def detect_triangles(src: cv2.typing.MatLike):
+# https://stackoverflow.com/questions/46300244/triangle-detection-using-opencv
+def detect_triangles(src: cv2.typing.MatLike, thresholds: TopologyThresholds):
+    min_switch_area, max_switch_area = thresholds.switch_area_bounds()
+
     kernel = np.ones((4, 4), np.uint8)
     dilation = cv2.dilate(src, kernel, iterations=1)
     blur = cv2.GaussianBlur(dilation, (5, 5), 0)
@@ -51,8 +55,8 @@ def detect_triangles(src: cv2.typing.MatLike):
         # TODO black condition is good for discarding incorrect triangles, but only works for "ferngestellte Weichen"
         if (
             len(approx) == 3
-            and triangle_area(approx) >= MIN_SWITCH_AREA
-            and triangle_area(approx) <= MAX_SWITCH_AREA
+            and triangle_area(approx) >= min_switch_area
+            and triangle_area(approx) <= max_switch_area
             and is_black_inside(src, approx)
         ):
             coordinates.append(approx)
