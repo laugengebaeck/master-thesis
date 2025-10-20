@@ -92,7 +92,6 @@ def create_graph(
     lines: list[tuple[Vector2D, Vector2D]], thresholds: TopologyThresholds
 ) -> nx.Graph:
     topology = nx.Graph()
-
     lines = split_into_segments(lines)
 
     for start_pt, end_pt in lines:

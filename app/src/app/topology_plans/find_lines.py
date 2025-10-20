@@ -20,7 +20,7 @@ def is_line_angle_correct(line: tuple[Vector2D, Vector2D]) -> bool:
     delta_x1 = abs(line[1].x - line[0].x)
     angle = abs(math.degrees(math.atan(delta_y1 / delta_x1))) if delta_x1 >= 10 else 90
 
-    # reject 90 degrees angles, allow 0, ~20 and ~45 degree angles
+    # reject 90 degree angles, allow 0, ~20 and ~45 degree angles
     return angle == 0 or abs(angle - 20) < 10 or abs(angle - 45) < 10
 
 
@@ -42,7 +42,7 @@ def is_line_similar(
     startdist_switched = distance(line[0], line_comp[1])
     enddist_switched = distance(line[1], line_comp[0])
 
-    # very complicated implementation of "both lines go in the same direction on the x-axis from the point where they meet"
+    # do both lines go in the same direction on the x-axis from the point where they meet?
     if startdist <= similar_line_dist:
         return (line[0].x < line[1].x) == (line_comp[0].x < line_comp[1].x)
     elif enddist <= similar_line_dist:
