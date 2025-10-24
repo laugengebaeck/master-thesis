@@ -73,10 +73,3 @@ def get_triangle_center_points(coordinates) -> list[Vector2D]:
         y_middle = (pnt0[1] + pnt1[1] + pnt2[1]) // 3
         centers.append(Vector2D.from_tuple((x_middle, y_middle)))
     return centers
-
-
-def visualize_switches(img, switches, path):
-    dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    for switch in switches:
-        cv2.drawContours(dst, [switch], 0, (0, 0, 255), 3)
-    cv2.imwrite(path, dst)

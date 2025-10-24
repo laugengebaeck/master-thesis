@@ -17,3 +17,9 @@ def pillow_image_to_bytes(img: Image.Image) -> bytes:
 
 def flatten_iterable(it):
     return list(itertools.chain.from_iterable(it))
+
+
+class ValidationRuleResult:
+    def __init__(self, success: bool, error_message: str = "") -> None:
+        self.success = success
+        self.error_message = error_message

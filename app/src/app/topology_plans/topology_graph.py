@@ -1,7 +1,5 @@
 import math
 
-import cv2
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import shapely
@@ -144,32 +142,3 @@ def remove_nodes_on_other_edges(G: nx.Graph, on_edge_dist: int) -> nx.Graph:
     for node in nodes_to_remove:
         G.remove_node(node)
     return G
-
-
-def visualize_graph(img: cv2.typing.MatLike, G: nx.Graph, path: str):
-    nx.draw_planar(G, with_labels=True)
-    plt.savefig("topology_graph.png")
-
-    color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    for node in G.nodes:
-        cv2.circle(color_dst, node, 20, (0, 255, 0), 5)
-    for u, v in G.edges:
-        cv2.line(color_dst, u, v, (0, 0, 255), 3, cv2.LINE_AA)
-    cv2.imwrite(path, color_dst)
-
-
-def check_created_graph(
-    G: nx.Graph, detected_switch_positions: list[Vector2D], thresholds: TopologyThresholds
-):
-    for node in G.nodes:
-        if G.degree[node] >= 4:  # type: ignore
-            print(f"In the created topology, node {node} has more than 3 neighbors. That's wrong.")
-        if G.degree[node] == 3 and all(math.dist(node, switch.to_tuple()) > thresholds.same_node_distance() for switch in detected_switch_positions):  # type: ignore
-            # TODO umgekehrt auch Dreieck, aber keine Weiche
-            print(
-                f"In the created topology, node {node} functions as a switch, but no switch symbol was found there. That's probably wrong."
-            )
-    cycles = sorted(nx.simple_cycles(G))
-    if len(cycles) > 0:
-        print(f"The created topology contains cycles. That's wrong.")
-        print(f"Cycles: {cycles}")

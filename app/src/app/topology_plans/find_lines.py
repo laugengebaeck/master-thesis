@@ -89,24 +89,3 @@ def detect_lines(
                 filtered_lines.append(l)
 
     return filtered_lines
-
-
-def visualize_lines(img, lines: list[tuple[Vector2D, Vector2D]], path):
-    color_dst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    for start, end in lines:
-        cv2.line(color_dst, start.to_tuple(), end.to_tuple(), (0, 0, 255), 3, cv2.LINE_AA)
-        # draw circles around the end points
-        cv2.circle(color_dst, start.to_tuple(), 20, (0, 255, 0), 5)
-        cv2.circle(color_dst, end.to_tuple(), 20, (0, 255, 0), 5)
-        # debug thingy to print angles on the image
-        cv2.putText(
-            color_dst,
-            f"{math.degrees(math.atan((end.y-start.y)/(end.x-start.x)))} deg",
-            (int((start.x + end.x) // 2), int((start.y + end.y) // 2)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 0, 0),
-            2,
-            cv2.LINE_AA,
-        )
-    cv2.imwrite(path, color_dst)

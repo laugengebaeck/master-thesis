@@ -3,13 +3,13 @@ class TopologyThresholds:
         self.scale = min(width, height)
 
     def similar_line_distance(self) -> int:
-        return round(0.06 * self.scale)
+        return round(0.05 * self.scale)
 
     def min_line_length(self) -> int:
-        return round(0.06 * self.scale)
+        return round(0.05 * self.scale)
 
     def max_line_gap(self) -> int:
-        return round(0.015 * self.scale)
+        return round(0.017 * self.scale)
 
     def same_node_distance(self) -> int:
         return round(0.07 * self.scale)
