@@ -1,8 +1,8 @@
 from zipfile import ZipFile
 
-import plans.handlers as handlers
-from plans.import_export import plan_export
-from plans.read import PlanReader
+import table_plans.handlers as handlers
+from table_plans.csv import plan_export_csv
+from table_plans.pdf_read import PlanReader
 
 plan_file_map = {
     # "Az": handlers.handle_az_plan,
@@ -30,5 +30,5 @@ def detect_plans(zip_file: str, plan_reader: PlanReader):
             if len(plan_files) != 0:
                 pdf_file = zip.read(plan_files[0])
                 tables = plan_reader.read_tables(pdf_file)
-                plan_export(tables, plan_type, plan_files[0])
+                plan_export_csv(tables, plan_type, plan_files[0])
                 handler(tables)

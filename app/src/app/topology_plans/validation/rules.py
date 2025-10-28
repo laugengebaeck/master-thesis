@@ -1,3 +1,4 @@
+import math
 from abc import ABC, abstractmethod
 
 import networkx as nx
@@ -18,7 +19,7 @@ class TopologyValidationRule(ABC):
 
 
 class NeighborCountValidation(TopologyValidationRule):
-    severity = ValidationRuleSeverity.WARNING
+    severity = ValidationRuleSeverity.ERROR
 
     def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> ValidationRuleResult:
         for node in topology.nodes:
@@ -31,11 +32,11 @@ class NeighborCountValidation(TopologyValidationRule):
 
 
 class SwitchSymbolValidation(TopologyValidationRule):
-    severity = ValidationRuleSeverity.ERROR
+    severity = ValidationRuleSeverity.WARNING
 
     def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> ValidationRuleResult:
         for node in topology.nodes:
-            if G.degree[node] == 3 and all(math.dist(node, switch.to_tuple()) > self.thresholds.same_node_distance() for switch in switch_positions):  # type: ignore
+            if topology.degree[node] == 3 and all(math.dist(node, switch.to_tuple()) > self.thresholds.same_node_distance() for switch in switch_positions):  # type: ignore
                 # TODO umgekehrt auch Dreieck, aber keine Weiche
                 return ValidationRuleResult(
                     False,

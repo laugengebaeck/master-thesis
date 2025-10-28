@@ -7,6 +7,7 @@ from topology_plans.validation.rules import (
     TopologyValidationRule,
 )
 from topology_plans.vector import Vector2D
+from util import ValidationRuleSeverity
 
 
 class TopologyValidator:
@@ -17,9 +18,15 @@ class TopologyValidator:
             NoCyclesValidation(thresholds),
         ]
 
-    def check(self, topology: nx.Graph, switch_positions: list[Vector2D]):
+    def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> bool:
+        validation_failed = False
+        print()
         print("[Validation Results]")
         for rule in self.rules:
             result = rule.check(topology, switch_positions)
             if not result.success:
                 print(f"{rule.severity.get_message()} {result.error_message}")
+                if rule.severity == ValidationRuleSeverity.ERROR:
+                    validation_failed = True
+        print()
+        return validation_failed

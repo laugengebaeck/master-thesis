@@ -1,5 +1,5 @@
 import pandas as pd
-from signals.parse import parse_signal_column
+from table_plans.parsers.signals import parse_signal_column
 
 
 def handle_az_plan(tables: list[pd.DataFrame]):

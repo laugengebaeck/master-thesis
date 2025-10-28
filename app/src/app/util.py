@@ -32,11 +32,11 @@ class ValidationRuleSeverity(Enum):
     ERROR = 3
 
     def get_message(self) -> str:
-        if self.value == ValidationRuleSeverity.INFO:
+        if self == ValidationRuleSeverity.INFO:
             return "ℹ️ Information:"
-        elif self.value == ValidationRuleSeverity.WARNING:
-            return "⚠️ Warning:"
-        elif self.value == ValidationRuleSeverity.ERROR:
+        elif self == ValidationRuleSeverity.WARNING:
+            return "⚠️  Warning:"
+        elif self == ValidationRuleSeverity.ERROR:
             return "❌ Error:"
         else:
             return ""

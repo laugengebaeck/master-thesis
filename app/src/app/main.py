@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
 from networkx_importer import NetworkxImporter
-from plans.load import load_plans
-from plans.read import PlanReaderType
+from table_plans.load import load_plans
+from table_plans.pdf_read import PlanReaderType
 from topology_plans.find_lines import detect_lines
 from topology_plans.find_switches import detect_triangles, get_triangle_center_points
 from topology_plans.thresholds import TopologyThresholds
 from topology_plans.topology_graph import create_graph
-from topology_plans.validation.checker import TopologyValidator
+from topology_plans.validation.validator import TopologyValidator
 from topology_plans.visualization import visualize_graph, visualize_lines, visualize_switches
 from util import convert_pdf_to_images, pillow_image_to_bytes
 
@@ -44,21 +44,36 @@ def topology_main():
 
     thresholds = TopologyThresholds(*src.shape)
 
+    print("Detecting lines in the input document...")
     lines = detect_lines(src, thresholds)
     visualize_lines(src, lines, "detected_probabilistic.png")
 
+    print("Combining lines to a topology...")
     topology = create_graph(lines, thresholds)
     visualize_graph(src, topology, "topology_graph_overlay.png")
 
+    print("Detecting switch symbols...")
     triangles = detect_triangles(src, thresholds)
     visualize_switches(src, triangles, "detected_triangles.png")
 
+    print("Validating generated topology...")
     validator = TopologyValidator(thresholds)
-    validator.check(topology, get_triangle_center_points(triangles))
+    validation_failed = validator.check(topology, get_triangle_center_points(triangles))
 
-    yaramo = NetworkxImporter(topology).run()
-    with open("export/yaramo_topology.json", "w") as file:
-        file.write(yaramo.to_json())
+    if validation_failed:
+        print("Generated topology contains errors, cannot continue.")
+        return
+
+    print("Importing topology into Yaramo model...")
+    try:
+        yaramo = NetworkxImporter(topology).run()
+        with open("export/yaramo_topology.json", "w") as file:
+            file.write(yaramo.to_json())
+    except Exception as e:
+        print(
+            "Yaramo import did not complete successfully. Please re-check the generated topology for problems."
+        )
+        print(f"Exception message: {e}")
 
 
 if __name__ == "__main__":
