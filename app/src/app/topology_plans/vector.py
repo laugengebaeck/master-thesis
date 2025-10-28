@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,6 +23,12 @@ class Vector2D:
 
     def __rmul__(self, factor):
         return Vector2D(factor * self.x, factor * self.y)
+
+    def dist(self, other: "Vector2D"):
+        return math.dist(self.to_tuple(), other.to_tuple())
+
+    def dot(self, other: "Vector2D"):
+        return int(self.x * other.x + self.y * other.y)
 
     @staticmethod
     def from_tuple(tup: tuple[int, int]):

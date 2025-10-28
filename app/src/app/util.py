@@ -1,5 +1,4 @@
 import itertools
-from enum import Enum
 from io import BytesIO
 
 from pdf2image import convert_from_bytes
@@ -18,25 +17,3 @@ def pillow_image_to_bytes(img: Image.Image) -> bytes:
 
 def flatten_iterable(it):
     return list(itertools.chain.from_iterable(it))
-
-
-class ValidationRuleResult:
-    def __init__(self, success: bool, error_message: str = "") -> None:
-        self.success = success
-        self.error_message = error_message
-
-
-class ValidationRuleSeverity(Enum):
-    INFO = 1
-    WARNING = 2
-    ERROR = 3
-
-    def get_message(self) -> str:
-        if self == ValidationRuleSeverity.INFO:
-            return "ℹ️ Information:"
-        elif self == ValidationRuleSeverity.WARNING:
-            return "⚠️  Warning:"
-        elif self == ValidationRuleSeverity.ERROR:
-            return "❌ Error:"
-        else:
-            return ""

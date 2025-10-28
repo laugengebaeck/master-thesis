@@ -3,8 +3,8 @@ from enum import Enum
 
 import pandas as pd
 from img2table.document import PDF
-from tables.crop import pdf_get_table_images
-from tables.ocr import tables_perform_ocr
+from table_plans.tables.crop import pdf_get_table_images
+from table_plans.tables.ocr import tables_perform_ocr
 from util import convert_pdf_to_images
 
 

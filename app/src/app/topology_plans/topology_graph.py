@@ -6,14 +6,6 @@ import shapely
 from topology_plans.thresholds import TopologyThresholds
 from topology_plans.vector import Vector2D
 
-SAME_NODE_DIST = 200
-SPUR_MAX_LENGTH = 300
-ON_EDGE_DIST = 5
-
-
-def dot(p1: Vector2D, p2: Vector2D) -> int:
-    return int(p1.x * p2.x + p1.y * p2.y)
-
 
 # measures distance between point p and line segment vw
 # https://stackoverflow.com/a/1501725
@@ -21,17 +13,17 @@ def dist_point_line_segment(p: Vector2D, line_segment: tuple[Vector2D, Vector2D]
     v, w = line_segment
     l_vw_squared = (v.x - w.x) ** 2 + (v.y - w.y) ** 2
     if l_vw_squared == 0:
-        return math.dist(p.to_tuple(), v.to_tuple())
+        return p.dist(v)
 
     # Consider the line extending the segment, parameterized as v + t (w - v).
     # We find projection of point p onto the line.
     # It falls where t = [(p-v) . (w-v)] / |w-v|^2
     # We clamp t from [0,1] to handle points outside the segment vw.
-    t = max(0, min(1, float(dot(p - v, w - v) / l_vw_squared)))
+    t = max(0, min(1, float((p - v).dot(w - v) / l_vw_squared)))
     projection = v + t * (w - v)
 
     # Projection falls on the segment
-    return math.dist(p.to_tuple(), projection.to_tuple())
+    return p.dist(projection)
 
 
 def line_intersection(

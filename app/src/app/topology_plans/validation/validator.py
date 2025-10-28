@@ -7,7 +7,7 @@ from topology_plans.validation.rules import (
     TopologyValidationRule,
 )
 from topology_plans.vector import Vector2D
-from util import ValidationRuleSeverity
+from validation_util import ValidationRuleSeverity
 
 
 class TopologyValidator:

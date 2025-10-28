@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import networkx as nx
 from topology_plans.thresholds import TopologyThresholds
 from topology_plans.vector import Vector2D
-from util import ValidationRuleResult, ValidationRuleSeverity
+from validation_util import ValidationRuleResult, ValidationRuleSeverity
 
 
 class TopologyValidationRule(ABC):

@@ -5,14 +5,6 @@ import numpy as np
 from topology_plans.thresholds import TopologyThresholds
 from topology_plans.vector import Vector2D
 
-SIMILAR_LINE_DISTANCE = 150
-MIN_LINE_LENGTH = 125
-MAX_LINE_GAP = 40
-
-
-def distance(point0: Vector2D, point1: Vector2D) -> float:
-    return math.dist(point0.to_tuple(), point1.to_tuple())
-
 
 def is_line_angle_correct(line: tuple[Vector2D, Vector2D]) -> bool:
     # check angle, special handling for lines nearly parallel to y axis
@@ -37,10 +29,10 @@ def is_line_similar(
         return False
 
     # there are usually lots of lines near each other at these symbols
-    startdist = distance(line[0], line_comp[0])
-    enddist = distance(line[1], line_comp[1])
-    startdist_switched = distance(line[0], line_comp[1])
-    enddist_switched = distance(line[1], line_comp[0])
+    startdist = line[0].dist(line_comp[0])
+    enddist = line[1].dist(line_comp[1])
+    startdist_switched = line[0].dist(line_comp[1])
+    enddist_switched = line[1].dist(line_comp[0])
 
     # do both lines go in the same direction on the x-axis from the point where they meet?
     if startdist <= similar_line_dist:
@@ -56,8 +48,7 @@ def is_line_similar(
 
 
 def convert_opencv_line_to_points(line) -> tuple[Vector2D, Vector2D]:
-    line = line[0]
-    return Vector2D(line[0], line[1]), Vector2D(line[2], line[3])
+    return Vector2D(line[0][0], line[0][1]), Vector2D(line[0][2], line[0][3])
 
 
 def detect_lines(
@@ -80,9 +71,9 @@ def detect_lines(
             found_flag = False
             for l_comp in linesP:
                 # always keep the longest of the similar lines
-                if is_line_similar(l, l_comp, thresholds.similar_line_distance()) and distance(
-                    l[0], l[1]
-                ) < distance(l_comp[0], l_comp[1]):
+                if is_line_similar(l, l_comp, thresholds.similar_line_distance()) and l[0].dist(
+                    l[1]
+                ) < l_comp[0].dist(l_comp[1]):
                     found_flag = True
                     break
             if not found_flag:
