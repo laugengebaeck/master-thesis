@@ -4,9 +4,10 @@ from networkx_importer import NetworkxImporter
 from plans.load import load_plans
 from plans.read import PlanReaderType
 from topology_plans.find_lines import detect_lines
-from topology_plans.find_switches import detect_triangles
+from topology_plans.find_switches import detect_triangles, get_triangle_center_points
 from topology_plans.thresholds import TopologyThresholds
 from topology_plans.topology_graph import create_graph
+from topology_plans.validation.checker import TopologyValidator
 from topology_plans.visualization import visualize_graph, visualize_lines, visualize_switches
 from util import convert_pdf_to_images, pillow_image_to_bytes
 
@@ -52,7 +53,8 @@ def topology_main():
     triangles = detect_triangles(src, thresholds)
     visualize_switches(src, triangles, "detected_triangles.png")
 
-    # check_created_graph(topology, get_triangle_center_points(triangles), thresholds)
+    validator = TopologyValidator(thresholds)
+    validator.check(topology, get_triangle_center_points(triangles))
 
     yaramo = NetworkxImporter(topology).run()
     with open("export/yaramo_topology.json", "w") as file:
