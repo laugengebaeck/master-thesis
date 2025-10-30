@@ -5,6 +5,7 @@ from yaramo.additional_signal import (
     AdditionalSignalZs2,
     AdditionalSignalZs2v,
     AdditionalSignalZs3,
+    AdditionalSignalZs3Type,
     AdditionalSignalZs3v,
 )
 from yaramo.edge import Edge
@@ -86,7 +87,7 @@ def get_signal_kind(df: pd.DataFrame, col: int) -> SignalKind:
     return SignalKind.andere
 
 
-def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
+def get_signal_states(df: pd.DataFrame, col: int, signal_name: str) -> set[SignalState]:
     states = set()
 
     hp0_cell = df.iat[20, col]
@@ -122,15 +123,11 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
         if "1" in zs_signal_strings:
             states.add(SignalState.ZS1)
         elif "6" in zs_signal_strings:
-            # TODO yaramo doesn't know Zs6
-            # TODO 6F is also possible
-            pass
+            states.add(SignalState.ZS6)
         elif "7" in zs_signal_strings:
-            # TODO yaramo doesn't know Zs7
-            pass
+            states.add(SignalState.ZS7)
         elif "13" in zs_signal_strings:
-            # TODO yaramo doesn't know Zs13
-            pass
+            states.add(SignalState.ZS13)
 
     zs2_cell = df.iat[16, col]
     if not pd.isna(zs2_cell):
@@ -151,12 +148,11 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
     kl_zl_cell = df.iat[24, col]
     if not pd.isna(kl_zl_cell):
         kl_zl_str = str(kl_zl_cell)
+        is_wiederholer = signal_name.upper().startswith("VW")
         if "Kl" in kl_zl_str:
-            # TODO once added in Yaramo
-            pass
+            states.add(SignalState.KL)
         if "Zl" in kl_zl_str:
-            # TODO see above, Zlu for Vorsignalwiederholer, Zlo for everything else
-            pass
+            states.add(SignalState.ZLU if is_wiederholer else SignalState.ZLO)
 
     mastschild_cell = df.iat[32, col]
     if not pd.isna(mastschild_cell):
@@ -165,8 +161,8 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
         if "V" in str(mastschild_cell):
             states.add(SignalState.MS_GE_D)
         if "Sp" in str(mastschild_cell):
-            # TODO yaramo kann Mastschild "weiß mit zwei schwarzen Punkten" noch nicht
-            pass
+            # TODO im DS-Bereich wsl. inkorrekt -> stattdessen WS_RT_WS
+            states.add(SignalState.MS_WS_2SWP)
 
     vorsignaltafel_cell = df.iat[33, col]
     if not pd.isna(vorsignaltafel_cell):
@@ -178,7 +174,7 @@ def get_signal_states(df: pd.DataFrame, col: int) -> set[SignalState]:
 def cell_to_zs3_symbols(cell_content: str) -> list[AdditionalSignalZs3.AdditionalSignalSymbolZs3]:
     zs3_symbols = []
     for number_str in cell_content.split(","):
-        # TODO yaramo kann Form-Zs3 nicht extra angeben
+        # form Zs3 handled elsewhere
         number_str = number_str.replace(" ", "").removesuffix("F")
         number = int(number_str)
         if number > 16:
@@ -222,13 +218,26 @@ def get_additional_signals(df: pd.DataFrame, col: int) -> list[AdditionalSignal]
 
     zs3_cell = df.iat[18, col]
     if not pd.isna(zs3_cell):
-        add_signals.append(AdditionalSignalZs3(cell_to_zs3_symbols(str(zs3_cell))))
+        zs3_type = (
+            AdditionalSignalZs3Type.FORM_SIGNAL
+            if "F" in str(zs3_cell)
+            else AdditionalSignalZs3Type.LIGHT_SIGNAL
+        )
+        add_signals.append(AdditionalSignalZs3(cell_to_zs3_symbols(str(zs3_cell)), type=zs3_type))
 
     zs3v_cell = df.iat[19, col]
     if not pd.isna(zs3v_cell):
-        add_signals.append(AdditionalSignalZs3v(cell_to_zs3_symbols(str(zs3v_cell))))
+        zs3v_type = (
+            AdditionalSignalZs3Type.FORM_SIGNAL
+            if "F" in str(zs3v_cell)
+            else AdditionalSignalZs3Type.LIGHT_SIGNAL
+        )
+        add_signals.append(
+            AdditionalSignalZs3v(cell_to_zs3_symbols(str(zs3v_cell)), type=zs3v_type)
+        )
 
     # TODO Zs1, Zs6, Zs7, Zs13
+    # TODO 6F is also possible
 
     return add_signals
 
@@ -281,7 +290,7 @@ def parse_signal_column(df: pd.DataFrame, col: int) -> Signal | None:
         kind=get_signal_kind(df, col),
         system=SignalSystem.Ks,
         side_distance=get_side_distance(df, col),  # type: ignore
-        supported_states=get_signal_states(df, col),
+        supported_states=get_signal_states(df, col, signal_name),
         classification_number=classification_number,
     )
 

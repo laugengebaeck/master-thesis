@@ -1054,13 +1054,13 @@ develop = false
 
 [package.dependencies]
 networkx = ">=3.5,<4.0"
-yaramo = {git = "https://github.com/simulate-digital-rail/yaramo", rev = "yaramo2"}
+yaramo = {git = "https://github.com/laugengebaeck/yaramo", rev = "yaramo2"}
 
 [package.source]
 type = "git"
 url = "https://github.com/laugengebaeck/yaramo-networkx-importer"
 reference = "HEAD"
-resolved_reference = "dd2f4da6c393ec4da55dec033eae7627fd94d9cb"
+resolved_reference = "3afaec8a2fd5ba836c11e97034d0d4cd54a53a0d"
 
 [[package]]
 name = "nodeenv"
@@ -1706,25 +1706,6 @@ test-arrow = ["pyarrow"]
 tests = ["check-manifest", "coverage (>=7.4.2)", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout", "trove-classifiers (>=2024.10.12)"]
 typing = ["typing-extensions ; python_version < \"3.10\""]
 xmp = ["defusedxml"]
-
-[[package]]
-name = "planpro-exporter"
-version = "3.0"
-description = ""
-optional = false
-python-versions = "^3.11"
-groups = ["main"]
-files = []
-develop = false
-
-[package.dependencies]
-yaramo = {git = "https://github.com/simulate-digital-rail/yaramo", branch = "yaramo2"}
-
-[package.source]
-type = "git"
-url = "https://github.com/simulate-digital-rail/planpro-exporter"
-reference = "yaramo2"
-resolved_reference = "cf77a460f0d34ec77fa498ff0d934204ffb7ba7c"
 
 [[package]]
 name = "platformdirs"
@@ -2889,11 +2870,11 @@ simplejson = "^3.19.2"
 
 [package.source]
 type = "git"
-url = "https://github.com/simulate-digital-rail/yaramo"
+url = "https://github.com/laugengebaeck/yaramo"
 reference = "yaramo2"
-resolved_reference = "ce20b43f2a634e4e4414273b2cf753d3653e6eda"
+resolved_reference = "2f00519bd5565bae526b9a5809ec86e92c1f44f3"
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "38e3f4540005c597036d72bf6243962d61c3f469a32d6d882dabad64bb15c91e"
+content-hash = "2851981387bfd10bb3c450f8a072395c4d55504e339f154cf6f5bdc7df967b9a"
