@@ -33,7 +33,7 @@ def main():
     if args.topo is not None or args.topo_example is not None:
         topology_main(args.topo, args.topo_example)
 
-    if args.table is not None:
+    if args.table is not None or args.default_table:
         plan_reader_type = PlanReaderType.IMAGE_OPTIMIZED
         if args.table_reader == "pdf":
             plan_reader_type = PlanReaderType.PDF_TEXT

@@ -6,8 +6,8 @@ from topology_plans.validation.rules import (
     SwitchSymbolValidation,
     TopologyValidationRule,
 )
-from topology_plans.vector import Vector2D
-from validation_util import ValidationRuleSeverity
+from util.validation import ValidationRuleSeverity
+from util.vector import Vector2D
 
 
 class TopologyValidator:

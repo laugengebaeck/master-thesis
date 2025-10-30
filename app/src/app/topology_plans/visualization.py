@@ -3,7 +3,7 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 import networkx as nx
-from topology_plans.vector import Vector2D
+from util.vector import Vector2D
 
 
 def visualize_lines(img: cv2.typing.MatLike, lines: list[tuple[Vector2D, Vector2D]], path: str):

@@ -1,24 +1,7 @@
-import math
-
 import cv2
 import numpy as np
 from topology_plans.thresholds import TopologyThresholds
-from topology_plans.vector import Vector2D
-
-
-def triangle_to_points(triangle: cv2.typing.MatLike):
-    return triangle[0][0], triangle[1][0], triangle[2][0]
-
-
-def triangle_area(approx: cv2.typing.MatLike):
-    pnt0, pnt1, pnt2 = triangle_to_points(approx)
-    a = math.dist(pnt0, pnt1)
-    b = math.dist(pnt1, pnt2)
-    c = math.dist(pnt2, pnt0)
-    s = (a + b + c) / 2
-
-    # Heron's formula
-    return math.sqrt(s * (s - a) * (s - b) * (s - c))
+from util.geometry import triangle_area
 
 
 # see https://stackoverflow.com/questions/60964249/how-to-check-the-color-of-pixels-inside-a-polygon-and-remove-the-polygon-if-it-c
@@ -60,13 +43,3 @@ def detect_triangles(src: cv2.typing.MatLike, thresholds: TopologyThresholds):
         ):
             coordinates.append(approx)
     return coordinates
-
-
-def get_triangle_center_points(coordinates) -> list[Vector2D]:
-    centers = []
-    for approx in coordinates:
-        pnt0, pnt1, pnt2 = triangle_to_points(approx)
-        x_middle = (pnt0[0] + pnt1[0] + pnt2[0]) // 3
-        y_middle = (pnt0[1] + pnt1[1] + pnt2[1]) // 3
-        centers.append(Vector2D.from_tuple((x_middle, y_middle)))
-    return centers

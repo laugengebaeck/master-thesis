@@ -1,6 +1,6 @@
 from img2table.document import Image as I2T_Image
 from PIL import Image
-from util import convert_pdf_to_images, pillow_image_to_bytes
+from util.images import convert_pdf_to_images, pillow_image_to_bytes
 
 
 def image_detect_table(img: Image.Image) -> tuple[int, int, int, int]:

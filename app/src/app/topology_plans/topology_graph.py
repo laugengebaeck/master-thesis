@@ -1,108 +1,9 @@
 import math
 
 import networkx as nx
-import numpy as np
-import shapely
 from topology_plans.thresholds import TopologyThresholds
-from topology_plans.vector import Vector2D
-
-
-# measures distance between point p and line segment vw
-# https://stackoverflow.com/a/1501725
-def dist_point_line_segment(p: Vector2D, line_segment: tuple[Vector2D, Vector2D]) -> float:
-    v, w = line_segment
-    l_vw_squared = (v.x - w.x) ** 2 + (v.y - w.y) ** 2
-    if l_vw_squared == 0:
-        return p.dist(v)
-
-    # Consider the line extending the segment, parameterized as v + t (w - v).
-    # We find projection of point p onto the line.
-    # It falls where t = [(p-v) . (w-v)] / |w-v|^2
-    # We clamp t from [0,1] to handle points outside the segment vw.
-    t = max(0, min(1, float((p - v).dot(w - v) / l_vw_squared)))
-    projection = v + t * (w - v)
-
-    # Projection falls on the segment
-    return p.dist(projection)
-
-
-def line_intersection(
-    line1: tuple[Vector2D, Vector2D], line2: tuple[Vector2D, Vector2D]
-) -> Vector2D | None:
-    u1, v1 = line1
-    u2, v2 = line2
-    ls1 = shapely.geometry.LineString([u1.to_tuple(), v1.to_tuple()])
-    ls2 = shapely.geometry.LineString([u2.to_tuple(), v2.to_tuple()])
-    if not ls1.intersects(ls2):
-        return None
-    intersection = ls1.intersection(ls2)
-    if isinstance(intersection, shapely.geometry.Point):
-        return Vector2D(np.int32(intersection.x), np.int32(intersection.y))
-    else:
-        return None
-
-
-# split lines into segments intersecting only at end points to facilitate graph creation
-def split_into_segments(lines: list[tuple[Vector2D, Vector2D]]) -> list[tuple[Vector2D, Vector2D]]:
-    finished_lines = []
-    lines_to_process = lines
-
-    while len(lines_to_process) > 0:
-        found_intersection = False
-        edge = lines_to_process.pop(0)
-        # finished_lines have no relevant intersections anymore, so no need to check them here
-        for other_edge in lines_to_process:
-            intersection = line_intersection(edge, other_edge)
-            # if intersection exists and is not one of the end points, split both edges
-            if (
-                intersection is not None
-                and intersection != edge[0]
-                and intersection != edge[1]
-                and intersection != other_edge[0]
-                and intersection != other_edge[1]
-            ):
-                found_intersection = True
-                lines_to_process.remove(other_edge)
-                lines_to_process.extend(
-                    [
-                        (edge[0], intersection),
-                        (intersection, edge[1]),
-                        (other_edge[0], intersection),
-                        (intersection, other_edge[1]),
-                    ]
-                )
-                break
-        if not found_intersection:
-            finished_lines.append(edge)
-
-    return finished_lines
-
-
-def create_graph(
-    lines: list[tuple[Vector2D, Vector2D]], thresholds: TopologyThresholds
-) -> nx.Graph:
-    topology = nx.Graph()
-    lines = split_into_segments(lines)
-
-    for start_pt, end_pt in lines:
-        # find nearby nodes to join this line to
-        start = start_pt.to_tuple()
-        end = end_pt.to_tuple()
-        if len(topology.nodes) > 0:
-            start_closest = min(topology.nodes, key=lambda node: math.dist(start, node))
-            if math.dist(start, start_closest) <= thresholds.same_node_distance():
-                start = start_closest
-            end_closest = min(topology.nodes, key=lambda node: math.dist(end, node))
-            if math.dist(end, end_closest) <= thresholds.same_node_distance():
-                end = end_closest
-        if start != end:
-            topology.add_edge(start, end)
-
-    topology = remove_spurs(topology, thresholds.max_spur_length())
-    topology = remove_nodes_on_other_edges(topology, thresholds.on_edge_dist())
-    largest_cc = max(nx.connected_components(topology), key=len)
-    topology = topology.subgraph(largest_cc).copy()
-    return topology
+from util.geometry import dist_point_line_segment
+from util.vector import Vector2D
 
 
 def remove_spurs(G: nx.Graph, max_spur_length: int) -> nx.Graph:
@@ -134,3 +35,29 @@ def remove_nodes_on_other_edges(G: nx.Graph, on_edge_dist: int) -> nx.Graph:
     for node in nodes_to_remove:
         G.remove_node(node)
     return G
+
+
+def create_graph(
+    lines: list[tuple[Vector2D, Vector2D]], thresholds: TopologyThresholds
+) -> nx.Graph:
+    topology = nx.Graph()
+
+    for start_pt, end_pt in lines:
+        # find nearby nodes to join this line to
+        start = start_pt.to_tuple()
+        end = end_pt.to_tuple()
+        if len(topology.nodes) > 0:
+            start_closest = min(topology.nodes, key=lambda node: math.dist(start, node))
+            if math.dist(start, start_closest) <= thresholds.same_node_distance():
+                start = start_closest
+            end_closest = min(topology.nodes, key=lambda node: math.dist(end, node))
+            if math.dist(end, end_closest) <= thresholds.same_node_distance():
+                end = end_closest
+        if start != end:
+            topology.add_edge(start, end)
+
+    topology = remove_spurs(topology, thresholds.max_spur_length())
+    topology = remove_nodes_on_other_edges(topology, thresholds.on_edge_dist())
+    largest_cc = max(nx.connected_components(topology), key=len)
+    topology = topology.subgraph(largest_cc).copy()
+    return topology

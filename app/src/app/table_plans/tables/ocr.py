@@ -2,7 +2,7 @@ import pandas as pd
 from img2table.document import Image as I2T_Image
 from img2table.ocr import DocTR
 from PIL import Image
-from util import pillow_image_to_bytes
+from util.images import pillow_image_to_bytes
 
 
 def table_perform_ocr(

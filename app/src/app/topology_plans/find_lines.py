@@ -3,7 +3,7 @@ import math
 import cv2
 import numpy as np
 from topology_plans.thresholds import TopologyThresholds
-from topology_plans.vector import Vector2D
+from util.vector import Vector2D
 
 
 def is_line_angle_correct(line: tuple[Vector2D, Vector2D]) -> bool:

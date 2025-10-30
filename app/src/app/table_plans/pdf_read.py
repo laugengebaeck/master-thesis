@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from zipfile import ZipFile
 
 import pandas as pd
 from img2table.document import PDF
+from table_plans.csv import plan_export_csv
 from table_plans.tables.crop import pdf_get_table_images
 from table_plans.tables.ocr import tables_perform_ocr
-from util import convert_pdf_to_images
+from util.images import convert_pdf_to_images
 
 
 class PlanReaderType(Enum):
@@ -42,3 +44,28 @@ class ImageOptimizedPlanReader(PlanReader):
     def read_tables(self, pdf_file: bytes) -> list[pd.DataFrame]:
         table_images = pdf_get_table_images(pdf_file)
         return tables_perform_ocr(table_images, min_confidence=self.min_confidence)
+
+
+def plan_reader_for_type(type: PlanReaderType) -> PlanReader:
+    match type:
+        case PlanReaderType.PDF_TEXT:
+            return PdfTextPlanReader()
+        case PlanReaderType.IMAGE_OPTIMIZED:
+            return ImageOptimizedPlanReader(min_confidence=30)
+        case PlanReaderType.IMAGE_UNOPTIMIZED:
+            return ImageUnoptimizedPlanReader()
+
+
+def read_tables_from_document(
+    plan_type: str, zip: ZipFile, plan_reader: PlanReader
+) -> list[pd.DataFrame]:
+    plan_files = list(filter(lambda f: f.endswith(".pdf") and plan_type in f, zip.namelist()))
+    if len(plan_files) > 1:
+        raise ValueError(f"ZIP file contains more than one plan of type {plan_type}.")
+    elif len(plan_files) == 1:
+        pdf_file = zip.read(plan_files[0])
+        tables = plan_reader.read_tables(pdf_file)
+        plan_export_csv(tables, plan_type, plan_files[0])
+        return tables
+    else:
+        return []
