@@ -1,4 +1,5 @@
 from networkx_importer import NetworkxImporter
+from planproexporter.generator import Generator as PlanProGenerator
 from topology_plans.find_lines import detect_lines
 from topology_plans.find_switches import detect_triangles
 from topology_plans.line_segments import split_into_segments
@@ -58,8 +59,9 @@ def topology_main(path: str | None, path_slug: str | None):
         yaramo = NetworkxImporter(topology).run()
         with open("export/yaramo_topology.json", "w") as file:
             file.write(yaramo.to_json())
+        PlanProGenerator().generate(yaramo, filename="export/planpro_export")
     except Exception as e:
         print(
-            "Yaramo import did not complete successfully. Please re-check the generated topology for problems."
+            "Yaramo import or PlanPro export did not complete successfully. Please re-check the generated topology for problems."
         )
         print(f"Exception message: {e}")
