@@ -2,6 +2,9 @@ from img2table.document import Image as I2T_Image
 from PIL import Image
 from util.images import convert_pdf_to_images, pillow_image_to_bytes
 
+MARGIN_WIDTH = 50
+TITLE_BLOCK_WIDTH = 1500
+
 
 def image_detect_table(img: Image.Image) -> tuple[int, int, int, int]:
     i2t_img = I2T_Image(src=pillow_image_to_bytes(img))
@@ -17,7 +20,7 @@ def image_crop_to_table(images: list[Image.Image]) -> list[Image.Image]:
 
         # crop so that outer border isn't visible anymore
         # TODO: this is a very sketchy solution
-        img_inner = img.crop((x1 + 50, y1, x2 - 1500, y2 - 50))
+        img_inner = img.crop((x1 + MARGIN_WIDTH, y1, x2 - TITLE_BLOCK_WIDTH, y2 - MARGIN_WIDTH))
 
         # now, get the actual table
         table_bbox = image_detect_table(img_inner)

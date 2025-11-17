@@ -45,7 +45,7 @@ class SwitchSymbolValidation(TopologyValidationRule):
         return ValidationRuleResult(True)
 
 
-# TODO: most topologies contain cycles!
+# TODO: most topologies contain cycles! -> remove?
 class NoCyclesValidation(TopologyValidationRule):
     severity = ValidationRuleSeverity.ERROR
 

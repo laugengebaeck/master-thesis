@@ -120,13 +120,13 @@ def get_signal_states(df: pd.DataFrame, col: int, signal_name: str) -> set[Signa
         logging.warning(f"column {col}: Zs1 and Zs7 should not occur together")
 
     for zs in zs_signal_strings:
-        if "1" in zs_signal_strings:
+        if zs == "1":
             states.add(SignalState.ZS1)
-        elif "6" in zs_signal_strings:
+        elif zs == "6":
             states.add(SignalState.ZS6)
-        elif "7" in zs_signal_strings:
+        elif zs == "7":
             states.add(SignalState.ZS7)
-        elif "13" in zs_signal_strings:
+        elif zs == "13":
             states.add(SignalState.ZS13)
 
     zs2_cell = df.iat[16, col]
