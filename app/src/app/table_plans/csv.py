@@ -11,9 +11,10 @@ def plan_export_csv(tables: list[pd.DataFrame], plan_type: str, original_path: s
 
 
 def plan_import_csv(plan_type: str, plan_export_name: str) -> list[pd.DataFrame]:
-    csv_files = os.listdir("export")
-    # sort by page number
-    csv_files.sort(key=lambda x: int(x.removesuffix(".csv").split("_")[-1]))
+    csv_files = list(filter(lambda f: f.endswith(".csv"), os.listdir("export")))
+    csv_files.sort(
+        key=lambda f: int(f.removesuffix(".csv").split("_")[-1].removeprefix("page"))
+    )  # sort by page number
     plans = []
     for file in csv_files:
         plan_name, file_type, _ = file.split("_")

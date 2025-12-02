@@ -33,7 +33,7 @@ def handle_sb_plan(tables: list[pd.DataFrame]):
 def handle_sig1_plan(tables: list[pd.DataFrame]):
     print("Processing Signaltabelle 1...")
     for i, table in enumerate(tables):
-        signals = [parse_signal_column(table, i) for i in range(3, table.shape[1])]
+        signals = [parse_signal_column(table, col, i) for col in range(3, table.shape[1])]
         print(f"Processed page {i+1}.")
         for signal in signals:
             if signal is not None:

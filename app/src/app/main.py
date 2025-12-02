@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from argparse import ArgumentParser, Namespace
 
 from table_plans.main import table_main
