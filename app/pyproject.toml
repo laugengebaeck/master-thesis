@@ -46,3 +46,12 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 100
+
+[tool.lst_plan_digi]
+similar_line_distance = 0.05
+min_line_length = 0.05
+max_line_gap = 0.017
+same_node_distance = 0.06
+max_spur_length = 0.075
+on_edge_dist = 0.00125
+switch_area_bounds = { min = 0.05, max = 0.2 }

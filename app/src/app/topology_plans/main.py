@@ -1,3 +1,5 @@
+import tomllib
+
 from networkx_importer import NetworkxImporter
 from planproexporter.generator import Generator as PlanProGenerator
 from topology_plans.find_lines import detect_lines
@@ -14,8 +16,7 @@ long_paths = {
     "phausen": "../../Planungen_PT1/2019-10-30_PT1_ÄM02/PHSUxx50-Bl2.pdf",
     "forchheim_part": "../../Planungen_PT1/Forchheim_Ausschnitt_scanned.pdf",
     "forchheim_full": "../../Planungen_PT1/Forchheim_PT1_scanned.pdf",
-    "maschek": "../../Planungen_PT1/Maschek_Bild_10-7.png",
-    "pachl": "../../Planungen_PT1/Pachl_Bild_4-16.png",
+    "ostelsheim": "../../Planungen_PT1/Ostelsheim_20250414.pdf",
 }
 
 
@@ -31,7 +32,10 @@ def topology_main(path: str | None, path_slug: str | None):
         print("Could not open input file!")
         return -1
 
-    thresholds = TopologyThresholds(*src.shape)
+    with open("pyproject.toml", "rb") as f:
+        data = tomllib.load(f)
+        config = data["tool"]["lst_plan_digi"]
+        thresholds = TopologyThresholds(config, *src.shape)
 
     print("Detecting lines in the input document...")
     lines = detect_lines(src, thresholds)
