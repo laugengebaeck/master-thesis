@@ -35,9 +35,10 @@ class MainAspectValidation(TableValidationRule):
                 else:
                     results.append(ValidationRuleResult(True))
 
+                # TODO Sonderfall fahrtbildlose Hauptsignale
                 if (
                     not SignalState.KS1 in signal.supported_states
-                    or SignalState.KS2 in signal.supported_states
+                    and not SignalState.KS2 in signal.supported_states
                 ):
                     results.append(
                         ValidationRuleResult(
@@ -72,6 +73,43 @@ class DistantAspectValidation(TableValidationRule):
                     results.append(
                         ValidationRuleResult(
                             False, f"{signal.name} is a distant signal, but is able to show Hp0."
+                        )
+                    )
+                else:
+                    results.append(ValidationRuleResult(True))
+
+        return results
+
+
+class DistantAdditionalAspectsValidation(TableValidationRule):
+    severity = ValidationRuleSeverity.ERROR
+
+    def check(self, signals: list[Signal], raw_table: pd.DataFrame) -> list[ValidationRuleResult]:
+        results = []
+
+        for signal in signals:
+            if signal.function == SignalFunction.Vorsignal_Vorsignalwiederholer:
+                if (
+                    SignalState.SH1 in signal.supported_states
+                    or SignalState.RA12 in signal.supported_states
+                ):
+                    results.append(
+                        ValidationRuleResult(
+                            False,
+                            f"{signal.name} is a distant signal, but can show a shunting aspect (Sh1 or Ra12).",
+                        )
+                    )
+                else:
+                    results.append(ValidationRuleResult(True))
+
+                if (
+                    SignalState.ZS3 in signal.supported_states
+                    or SignalState.ZS2 in signal.supported_states
+                ):
+                    results.append(
+                        ValidationRuleResult(
+                            False,
+                            f"{signal.name} is a distant signal, but can show a speed indicator (Zs3) or destination indicator (Zs2).",
                         )
                     )
                 else:

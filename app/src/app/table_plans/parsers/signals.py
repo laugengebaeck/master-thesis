@@ -111,12 +111,11 @@ def get_signal_kind(df: pd.DataFrame, col: int, table_id: int) -> SignalKind:
     ks_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Ks", table_id), col]
     ra_sh_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Ra / Sh", table_id), col]
 
-    is_main_signal = (
-        not pd.isna(hp0_cell) and not pd.isna(ks_cell) and "0" in str(hp0_cell)
-    )  # Hp0 + mindestens 1 Ks = Hauptsignal
-    is_distant_signal = not pd.isna(ks_cell) and "2" in str(
-        ks_cell
-    )  # Ks2 nur wenn Vorsignalfunktion
+    # Hp0 + mindestens 1 Ks = Hauptsignal
+    # TODO Sonderfall fahrtbildloses Hauptsignal
+    is_main_signal = not pd.isna(hp0_cell) and not pd.isna(ks_cell) and "0" in str(hp0_cell)
+    # Ks2 nur wenn Vorsignalfunktion
+    is_distant_signal = not pd.isna(ks_cell) and "2" in str(ks_cell)
     is_shunting_signal = not pd.isna(ra_sh_cell)
 
     if is_main_signal:
@@ -369,7 +368,6 @@ def parse_signal_column(df: pd.DataFrame, col: int, table_id: int) -> Signal | N
         return None
 
     classification_number, signal_name = split_signal_name(full_signal_name)
-    print(signal_name)
 
     signal = Signal(
         name=signal_name,

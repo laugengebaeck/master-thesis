@@ -1,5 +1,6 @@
 import pandas as pd
 from table_plans.validation.rules import (
+    DistantAdditionalAspectsValidation,
     DistantAspectValidation,
     MainAspectValidation,
     TableValidationRule,
@@ -9,11 +10,12 @@ from util.validation import ValidationRuleSeverity
 from yaramo.signal import Signal
 
 
-class TopologyValidator:
+class TableValidator:
     def __init__(self) -> None:
         self.rules: list[TableValidationRule] = [
             MainAspectValidation(),
             DistantAspectValidation(),
+            DistantAdditionalAspectsValidation(),
             Zs1Zs7Validation(),
         ]
 
