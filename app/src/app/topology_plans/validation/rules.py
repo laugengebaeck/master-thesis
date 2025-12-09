@@ -14,43 +14,72 @@ class TopologyValidationRule(ABC):
         self.thresholds = thresholds
 
     @abstractmethod
-    def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> ValidationRuleResult:
+    def check(
+        self, topology: nx.Graph, switch_positions: list[Vector2D]
+    ) -> list[ValidationRuleResult]:
         pass
 
 
 class NeighborCountValidation(TopologyValidationRule):
     severity = ValidationRuleSeverity.ERROR
 
-    def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> ValidationRuleResult:
+    def check(
+        self, topology: nx.Graph, switch_positions: list[Vector2D]
+    ) -> list[ValidationRuleResult]:
+        results = []
+
         for node in topology.nodes:
             if topology.degree[node] >= 4:  # type: ignore
-                return ValidationRuleResult(
-                    False,
-                    f"In the created topology, node {node} has more than 3 neighbors.",
+                results.append(
+                    ValidationRuleResult(
+                        False,
+                        f"In the created topology, node {node} has more than 3 neighbors.",
+                    )
                 )
-        return ValidationRuleResult(True)
+            else:
+                results.append(ValidationRuleResult(True))
+        return results
 
 
-class SwitchSymbolValidation(TopologyValidationRule):
+class NoSwitchSymbolValidation(TopologyValidationRule):
     severity = ValidationRuleSeverity.WARNING
 
-    def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> ValidationRuleResult:
+    def check(
+        self, topology: nx.Graph, switch_positions: list[Vector2D]
+    ) -> list[ValidationRuleResult]:
+        results = []
+
         for node in topology.nodes:
-            if topology.degree[node] == 3 and all(math.dist(node, switch.to_tuple()) > self.thresholds.same_node_distance() for switch in switch_positions):  # type: ignore
-                # TODO umgekehrt auch Dreieck, aber keine Weiche
-                return ValidationRuleResult(
-                    False,
-                    f"In the created topology, node {node} functions as a switch, but no switch symbol was found there.",
+            if topology.degree[node] == 3 and not any(math.dist(node, switch.to_tuple()) <= self.thresholds.same_node_distance() for switch in switch_positions):  # type: ignore
+                results.append(
+                    ValidationRuleResult(
+                        False,
+                        f"In the created topology, node {node} functions as a switch, but no switch symbol was found there.",
+                    )
                 )
-        return ValidationRuleResult(True)
+            else:
+                results.append(ValidationRuleResult(True))
+
+        return results
 
 
-# TODO: most topologies contain cycles! -> remove?
-class NoCyclesValidation(TopologyValidationRule):
-    severity = ValidationRuleSeverity.ERROR
+class SwitchSymbolWithoutFunctionValidation(TopologyValidationRule):
+    severity = ValidationRuleSeverity.WARNING
 
-    def check(self, topology: nx.Graph, switch_positions: list[Vector2D]) -> ValidationRuleResult:
-        cycles = sorted(nx.simple_cycles(topology))
-        if len(cycles) > 0:
-            return ValidationRuleResult(False, f"The created topology contains cycles: {cycles}")
-        return ValidationRuleResult(True)
+    def check(
+        self, topology: nx.Graph, switch_positions: list[Vector2D]
+    ) -> list[ValidationRuleResult]:
+        results = []
+
+        for switch in switch_positions:
+            if not any(topology.degree[node] == 3 and math.dist(node, switch.to_tuple()) <= self.thresholds.same_node_distance() for node in topology.nodes):  # type: ignore
+                results.append(
+                    ValidationRuleResult(
+                        False,
+                        f"In the created topology, a switch symbol was found at position {switch.to_tuple()}, but there is no node that functions as a switch there.",
+                    )
+                )
+            else:
+                results.append(ValidationRuleResult(True))
+
+        return results

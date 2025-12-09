@@ -1,5 +1,3 @@
-import logging
-
 import pandas as pd
 from table_plans.parsers.row_mapping import get_row_number_for_attribute
 from yaramo.additional_signal import (
@@ -102,7 +100,7 @@ def get_signal_direction(signal_name: str) -> SignalDirection:
     elif signal_name.endswith("Y"):  # Sperrsig entgegen km-Richtung
         return SignalDirection.GEGEN
 
-    logging.warning(
+    print(
         f"Not able to extract signal direction from name for signal {signal_name}, assuming SignalDirection.IN"
     )
     return SignalDirection.IN
@@ -178,9 +176,6 @@ def get_signal_states(
             states.add(SignalState.SH1)
 
     zs_signal_strings = get_zs_signal_strings(df, col, table_id)
-
-    if "1" in zs_signal_strings and "7" in zs_signal_strings:
-        logging.warning(f"column {col}: Zs1 and Zs7 should not occur together")
 
     for zs in zs_signal_strings:
         if zs == "1":
@@ -343,16 +338,16 @@ def get_side_distance(df: pd.DataFrame, col: int, table_id: int) -> int | None:
     # if both distances are given, use left one for now (heuristic: signal probably belongs to track left of it)
     if not pd.isna(distance_left_cell):
         if not str(distance_left_cell).isdigit():
-            logging.warning(f"column {col}: Wrong row was chosen for side distance.")
+            print(f"column {col}: Wrong row was chosen for side distance (left).")
         else:
             return -1 * int(str(distance_left_cell))
     elif not pd.isna(distance_right_cell):
         if not str(distance_right_cell).isdigit():
-            logging.warning(f"column {col}: Wrong row was chosen for side distance.")
+            print(f"column {col}: Wrong row was chosen for side distance (right).")
         else:
             return int(str(distance_right_cell))
     else:
-        logging.warning(f"column {col}: No side distance for signal given")
+        print(f"column {col}: No side distance for signal given (or wrong row was chosen).")
 
     return None
 
@@ -370,7 +365,7 @@ def parse_signal_column(df: pd.DataFrame, col: int, table_id: int) -> Signal | N
     elif not pd.isna(misc_signal_cell):
         full_signal_name = str(misc_signal_cell)
     else:
-        logging.warning(f"column {col}: Column contains no signal name")
+        print(f"column {col}: Column contains no signal name")
         return None
 
     classification_number, signal_name = split_signal_name(full_signal_name)

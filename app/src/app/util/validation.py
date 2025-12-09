@@ -15,8 +15,8 @@ class ValidationRuleSeverity(Enum):
     def get_message(self) -> str:
         match self:
             case ValidationRuleSeverity.INFO:
-                return "ℹ️ Information:"
+                return "ℹ️ [Information]"
             case ValidationRuleSeverity.WARNING:
-                return "⚠️  Warning:"
+                return "⚠️  [Warning]"
             case ValidationRuleSeverity.ERROR:
-                return "❌ Error:"
+                return "❌ [Error]"
