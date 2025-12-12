@@ -7,12 +7,12 @@ from PIL import Image
 
 
 def convert_pdf_to_images(pdf_file: bytes) -> list[Image.Image]:
-    return convert_from_bytes(pdf_file, dpi=400, grayscale=True, fmt="png", use_cropbox=True)
+    return convert_from_bytes(pdf_file, dpi=400, fmt="png", use_cropbox=True)
 
 
 def pillow_image_to_bytes(img: Image.Image) -> bytes:
     img_bytes = BytesIO()
-    img.save(img_bytes, format="jpeg")
+    img.save(img_bytes, format="png")
     return img_bytes.getvalue()
 
 
@@ -25,3 +25,10 @@ def load_img_from_path(path: str) -> cv2.typing.MatLike | None:
             return cv2.imdecode(page_np, cv2.IMREAD_GRAYSCALE)
     else:
         return cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+
+
+def remove_noise(src: cv2.typing.MatLike) -> cv2.typing.MatLike:
+    kernel = np.ones((4, 4), np.uint8)
+    dilation = cv2.dilate(src, kernel, iterations=1)
+    blur = cv2.GaussianBlur(dilation, (5, 5), 0)
+    return blur

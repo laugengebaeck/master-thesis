@@ -22,13 +22,9 @@ def is_black_inside(img: cv2.typing.MatLike, triangle: cv2.typing.MatLike):
 def detect_triangles(src: cv2.typing.MatLike, thresholds: TopologyThresholds):
     min_switch_area, max_switch_area = thresholds.switch_area_bounds()
 
-    kernel = np.ones((4, 4), np.uint8)
-    dilation = cv2.dilate(src, kernel, iterations=1)
-    blur = cv2.GaussianBlur(dilation, (5, 5), 0)
     thresh = cv2.adaptiveThreshold(
-        blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
+        src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
     )
-
     contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     coordinates = []
