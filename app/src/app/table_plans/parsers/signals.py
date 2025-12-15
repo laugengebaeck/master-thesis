@@ -23,6 +23,23 @@ from yaramo.signal import (
     SignalSystem,
 )
 
+SIGNALBEGRIFF_HP_TITLE = "Signalbegriff Hp"
+SIGNALBEGRIFF_KS_TITLE = "Signalbegriff Ks"
+SIGNALBEGRIFF_SH_TITLE = "Signalbegriff Ra / Sh"
+SIGNALBEGRIFF_ZS_TITLES = [
+    "Signalbegriffe Zs (im Schirm)",
+    "Zs am Signalmast",
+    "Zs am Betonpfosten/Rohrmast (separat)",
+]
+ZS2_TITLE = "Richtungsanzeiger"
+ZS2V_TITLE = "Richtungsvoranzeiger"
+ZS3_TITLE = "Geschwindigkeitsanzeiger 6)"
+ZS3V_TITLE = "Geschwindigkeitsvoranzeiger 6)"
+KL_ZL_TITLE = "Kenn- / Zusatzlicht"
+MASTSCHILD_TITLE = "Mastschild"
+VSIG_TAFEL_TITLE = "Vorsignaltafel Rz S525.4.5 Bild Nr."
+DISTANCE_LEFT_RIGHT_TITLE = "Abstände zu Gleismitte von Mastmitte [mm] 2) links rechts"
+
 
 # splits in classification number and short name
 def split_signal_name(signal_name: str) -> tuple[str, str]:
@@ -107,9 +124,9 @@ def get_signal_direction(signal_name: str) -> SignalDirection:
 
 
 def get_signal_kind(df: pd.DataFrame, col: int, table_id: int) -> SignalKind:
-    hp0_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Hp", table_id), col]
-    ks_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Ks", table_id), col]
-    ra_sh_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Ra / Sh", table_id), col]
+    hp0_cell = df.iat[get_row_number_for_attribute(df, SIGNALBEGRIFF_HP_TITLE, table_id), col]
+    ks_cell = df.iat[get_row_number_for_attribute(df, SIGNALBEGRIFF_KS_TITLE, table_id), col]
+    ra_sh_cell = df.iat[get_row_number_for_attribute(df, SIGNALBEGRIFF_SH_TITLE, table_id), col]
 
     # Hp0 + mindestens 1 Ks = Hauptsignal
     # TODO Sonderfall fahrtbildloses Hauptsignal
@@ -137,11 +154,7 @@ def get_signal_kind(df: pd.DataFrame, col: int, table_id: int) -> SignalKind:
 
 
 def get_zs_signal_strings(df: pd.DataFrame, col: int, table_id: int) -> list[str]:
-    zs_rows = [
-        get_row_number_for_attribute(df, "Signalbegriffe Zs (im Schirm)", table_id),
-        get_row_number_for_attribute(df, "Zs am Signalmast", table_id),
-        get_row_number_for_attribute(df, "Zs am Betonpfosten/Rohrmast (separat)", table_id),
-    ]
+    zs_rows = [get_row_number_for_attribute(df, row, table_id) for row in SIGNALBEGRIFF_ZS_TITLES]
     zs_signal_strings = []
     for row in zs_rows:
         if not pd.isna(df.iat[row, col]):
@@ -155,18 +168,18 @@ def get_signal_states(
 ) -> set[SignalState]:
     states = set()
 
-    hp0_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Hp", table_id), col]
+    hp0_cell = df.iat[get_row_number_for_attribute(df, SIGNALBEGRIFF_HP_TITLE, table_id), col]
     if not pd.isna(hp0_cell) and str(hp0_cell) == "0":
         states.add(SignalState.HP0)
 
-    ks_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Ks", table_id), col]
+    ks_cell = df.iat[get_row_number_for_attribute(df, SIGNALBEGRIFF_KS_TITLE, table_id), col]
     if not pd.isna(ks_cell):
         if "1" in str(ks_cell):
             states.add(SignalState.KS1)
         if "2" in str(ks_cell):
             states.add(SignalState.KS2)
 
-    ra_sh_cell = df.iat[get_row_number_for_attribute(df, "Signalbegriff Ra / Sh", table_id), col]
+    ra_sh_cell = df.iat[get_row_number_for_attribute(df, SIGNALBEGRIFF_SH_TITLE, table_id), col]
     if not pd.isna(ra_sh_cell):
         # DV-Ra12 entspricht DS-Sh1
         if "Ra12" in str(ra_sh_cell):
@@ -186,27 +199,23 @@ def get_signal_states(
         elif zs == "13":
             states.add(SignalState.ZS13)
 
-    zs2_cell = df.iat[get_row_number_for_attribute(df, "Richtungsanzeiger", table_id), col]
+    zs2_cell = df.iat[get_row_number_for_attribute(df, ZS2_TITLE, table_id), col]
     if not pd.isna(zs2_cell):
         states.add(SignalState.ZS2)
 
-    zs2v_cell = df.iat[get_row_number_for_attribute(df, "Richtungsvoranzeiger", table_id), col]
+    zs2v_cell = df.iat[get_row_number_for_attribute(df, ZS2V_TITLE, table_id), col]
     if not pd.isna(zs2v_cell):
         states.add(SignalState.ZS2V)
 
-    zs3_cell = df.iat[
-        get_row_number_for_attribute(df, "Geschwindigkeitsanzeiger 6)", table_id), col
-    ]
+    zs3_cell = df.iat[get_row_number_for_attribute(df, ZS3_TITLE, table_id), col]
     if not pd.isna(zs3_cell):
         states.add(SignalState.ZS3)
 
-    zs3v_cell = df.iat[
-        get_row_number_for_attribute(df, "Geschwindigkeitsvoranzeiger 6)", table_id), col
-    ]
+    zs3v_cell = df.iat[get_row_number_for_attribute(df, ZS3V_TITLE, table_id), col]
     if not pd.isna(zs3v_cell):
         states.add(SignalState.ZS3V)
 
-    kl_zl_cell = df.iat[get_row_number_for_attribute(df, "Kenn- / Zusatzlicht", table_id), col]
+    kl_zl_cell = df.iat[get_row_number_for_attribute(df, KL_ZL_TITLE, table_id), col]
     if not pd.isna(kl_zl_cell):
         kl_zl_str = str(kl_zl_cell)
         is_wiederholer = signal_name.upper().startswith("VW")
@@ -215,7 +224,7 @@ def get_signal_states(
         if "Zl" in kl_zl_str:
             states.add(SignalState.ZLU if is_wiederholer else SignalState.ZLO)
 
-    mastschild_cell = df.iat[get_row_number_for_attribute(df, "Mastschild", table_id), col]
+    mastschild_cell = df.iat[get_row_number_for_attribute(df, MASTSCHILD_TITLE, table_id), col]
     if not pd.isna(mastschild_cell):
         if "H" in str(mastschild_cell):
             states.add(SignalState.MS_WS_RT_WS)
@@ -225,9 +234,7 @@ def get_signal_states(
             # TODO im DS-Bereich wsl. inkorrekt -> stattdessen WS_RT_WS
             states.add(SignalState.MS_WS_2SWP)
 
-    vorsignaltafel_cell = df.iat[
-        get_row_number_for_attribute(df, "Vorsignaltafel Rz S525.4.5 Bild Nr.", table_id), col
-    ]
+    vorsignaltafel_cell = df.iat[get_row_number_for_attribute(df, VSIG_TAFEL_TITLE, table_id), col]
     if not pd.isna(vorsignaltafel_cell):
         states.add(SignalState.NE2)
 
@@ -271,17 +278,15 @@ def cell_to_zs2_symbols(cell_content: str) -> list[AdditionalSignalZs2.Additiona
 def get_additional_signals(df: pd.DataFrame, col: int, table_id: int) -> list[AdditionalSignal]:
     add_signals = []
 
-    zs2_cell = df.iat[get_row_number_for_attribute(df, "Richtungsanzeiger", table_id), col]
+    zs2_cell = df.iat[get_row_number_for_attribute(df, ZS2_TITLE, table_id), col]
     if not pd.isna(zs2_cell):
         add_signals.append(AdditionalSignalZs2(cell_to_zs2_symbols(str(zs2_cell))))
 
-    zs2v_cell = df.iat[get_row_number_for_attribute(df, "Richtungsvoranzeiger", table_id), col]
+    zs2v_cell = df.iat[get_row_number_for_attribute(df, ZS2V_TITLE, table_id), col]
     if not pd.isna(zs2v_cell):
         add_signals.append(AdditionalSignalZs2v(cell_to_zs2_symbols(str(zs2v_cell))))
 
-    zs3_cell = df.iat[
-        get_row_number_for_attribute(df, "Geschwindigkeitsanzeiger 6)", table_id), col
-    ]
+    zs3_cell = df.iat[get_row_number_for_attribute(df, ZS3_TITLE, table_id), col]
     if not pd.isna(zs3_cell):
         zs3_type = (
             AdditionalSignalZs3Type.FORM_SIGNAL
@@ -290,9 +295,7 @@ def get_additional_signals(df: pd.DataFrame, col: int, table_id: int) -> list[Ad
         )
         add_signals.append(AdditionalSignalZs3(cell_to_zs3_symbols(str(zs3_cell)), type=zs3_type))
 
-    zs3v_cell = df.iat[
-        get_row_number_for_attribute(df, "Geschwindigkeitsvoranzeiger 6)", table_id), col
-    ]
+    zs3v_cell = df.iat[get_row_number_for_attribute(df, ZS3V_TITLE, table_id), col]
     if not pd.isna(zs3v_cell):
         zs3v_type = (
             AdditionalSignalZs3Type.FORM_SIGNAL
@@ -328,9 +331,7 @@ def get_additional_signals(df: pd.DataFrame, col: int, table_id: int) -> list[Ad
 
 
 def get_side_distance(df: pd.DataFrame, col: int, table_id: int) -> int | None:
-    distance_left_row = get_row_number_for_attribute(
-        df, "Abstände zu Gleismitte von Mastmitte [mm] 2) links rechts", table_id
-    )
+    distance_left_row = get_row_number_for_attribute(df, DISTANCE_LEFT_RIGHT_TITLE, table_id)
     distance_left_cell = df.iat[distance_left_row, col]
     distance_right_cell = df.iat[distance_left_row + 1, col]
 
