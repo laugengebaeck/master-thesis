@@ -19,34 +19,5 @@ def table_perform_ocr(
     return extracted_tables[0].df
 
 
-# TODO move
-def get_value(df: pd.DataFrame, i: int, j: int) -> str | None:
-    if i >= df.shape[0] or j >= df.shape[1]:
-        return None
-    value = df.iat[i, j]
-    return str(value) if not pd.isna(value) else None
-
-
-def table_perform_ocr_multiple(table_image: Image.Image, min_confidence: int):
-    det_archs = ["db_resnet50", "fast_base"]
-    table_dfs = [table_perform_ocr(table_image, min_confidence, arch) for arch in det_archs]
-    for i in range(table_dfs[0].shape[0]):
-        for j in range(table_dfs[0].shape[1]):
-            end_value = None
-            for idx, df in enumerate(table_dfs):
-                cell_value = get_value(df, i, j)
-                if end_value is None and cell_value is not None:
-                    end_value = cell_value
-                    print(
-                        f"table {idx}: found value not previously found for ({i}, {j}): None -> {cell_value}"
-                    )
-                elif cell_value is not None and cell_value != end_value:
-                    print(
-                        f"table {idx}: cell has different value than before (should not happen!) for {i}, {j}: {end_value} -> {cell_value}"
-                    )
-    return table_dfs[0]
-
-
 def tables_perform_ocr(table_images: list[Image.Image], min_confidence: int) -> list[pd.DataFrame]:
-    # return [table_perform_ocr_multiple(table_images[0], min_confidence)]
     return [table_perform_ocr(image, min_confidence) for image in table_images]
