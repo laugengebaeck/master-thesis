@@ -1,6 +1,6 @@
 from zipfile import ZipFile
 
-from table_plans.csv import plan_import_csv
+from table_plans.csv_import_export import plan_import_csv
 from table_plans.detect_plans import detect_and_handle_plans
 from table_plans.pdf_read import PlanReaderType, plan_reader_for_type, read_tables_from_document
 

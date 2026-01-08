@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 import pandas as pd
 from img2table.document import PDF
-from table_plans.csv import plan_export_csv
+from table_plans.csv_import_export import plan_export_csv
 from table_plans.tables.crop import pdf_get_table_images
 from table_plans.tables.ocr import tables_perform_ocr
 from util.images import convert_pdf_to_images
