@@ -38,4 +38,4 @@ You can probably find my thesis in the [OSM Bookshelf](https://osm.hpi.de/booksh
 
 > Automatisierte Bestandsplandigitalisierung in der Eisenbahninfrastrukturplanung
 
-It contains more explanations about how this implementation and the algorithms used in it work.
+It contains more explanations about how this implementation and the algorithms used in it work. If you don't have access to the OSM Bookshelf, you can request the thesis via e-mail (address in profile).
